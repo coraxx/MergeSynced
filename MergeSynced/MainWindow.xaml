@@ -1,0 +1,315 @@
+﻿<Window x:Class="MergeSynced.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MergeSynced"
+        mc:Ignorable="d"
+        Title="Merge Synced" Height="720" Width="900"
+		DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        Closing="MainWindow_OnClosing">
+    <Grid>
+        <Grid.RowDefinitions>
+			<RowDefinition Height="50"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="50"/>
+			<RowDefinition Height="150"/>
+			<RowDefinition Height="120"/>
+			<RowDefinition Height="80"/>
+			<RowDefinition Height="10"/>
+			<RowDefinition Height="40"/>
+			<RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+
+        <!-- Input files -->
+	    <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" >
+		    <Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="30"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+		    <Grid Grid.Column="0">
+			    <Grid.ColumnDefinitions>
+				    <ColumnDefinition Width="65"/>
+				    <ColumnDefinition Width="*"/>
+			    </Grid.ColumnDefinitions>
+
+				<Button Grid.Column="0" Margin="5 16 0 16" Content="Input A:" Click="SelectInputButtonA_OnClick" Padding="0"/>
+				<TextBox x:Name="FilePathA" Grid.Column="1" AllowDrop="True" VerticalAlignment="Center" VerticalContentAlignment="Center" Height="25"
+			             FontSize="16" Margin="5 0 10 0" BorderBrush="#454545"
+			             Drop="File_Drop" PreviewDragOver="FileDrop_PreviewAck" PreviewDragEnter="FileDrop_PreviewAck"/>
+		    </Grid>
+
+			<Button x:Name="SwitchPathsButton" Grid.Column="1" Margin="0 16" FontFamily="Marlett" Content="34" Click="SwitchInputs_OnClick"/>
+
+		    <Grid Grid.Column="2">
+			    <Grid.ColumnDefinitions>
+				    <ColumnDefinition Width="65"/>
+				    <ColumnDefinition Width="*"/>
+			    </Grid.ColumnDefinitions>
+
+				<Button Grid.Column="0" Margin="10 16 0 16" Content="Input B:" Click="SelectInputButtonB_OnClick" Padding="0"/>
+				<TextBox x:Name="FilePathB" Grid.Column="1" AllowDrop="True" VerticalAlignment="Center" VerticalContentAlignment="Center" Height="25"
+			             FontSize="16" Margin="5 0 10 0" BorderBrush="#454545"
+			             Drop="File_Drop" PreviewDragOver="FileDrop_PreviewAck" PreviewDragEnter="FileDrop_PreviewAck"/>
+		    </Grid>
+		</Grid>
+
+        <!-- Input file data -->
+		<ListBox x:Name="SelectionA" Grid.Row="1" Grid.Column="0"/>
+		<ListBox x:Name="SelectionB" Grid.Row="1" Grid.Column="1"/>
+
+        <!-- Output file and analysis settings -->
+		<Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" >
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="30"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+			<Grid Grid.Column="0" >
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="65"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+
+				<Button Grid.Column="0" Margin="5 16 0 16" Content="Output:" Click="SelectOutputButton_OnClick" Padding="0"/>
+				<TextBox x:Name="FilePathOut" Grid.Column="1" AllowDrop="True" VerticalAlignment="Center" VerticalContentAlignment="Center" Height="25"
+				         FontSize="16" Margin="5 0 10 0" BorderBrush="#454545"
+				         Drop="File_Drop" PreviewDragOver="FileDrop_PreviewAck" PreviewDragEnter="FileDrop_PreviewAck"/>
+			</Grid>
+
+
+			<Grid Grid.Column="2" >
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="110"/>
+					<ColumnDefinition Width="40"/>
+					<ColumnDefinition Width="90"/>
+					<ColumnDefinition Width="60"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+
+				<Label Grid.Column="0" Grid.Row="0" Content="Track A for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"/>
+				<Label Grid.Column="0" Grid.Row="1" Content="Track B for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"/>
+
+				<Label Grid.Column="2" Grid.Row="0" Content="Sample start (s):" Padding="0" Margin="5 0 0 0"
+				       VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Right"/>
+				<TextBox x:Name="SampleStart" Grid.Column="3" Grid.Row="0" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="0"
+				         Margin="5 2" BorderBrush="#454545" PreviewTextInput="Uint32_OnPreviewTextInput"/>
+
+				<Label Grid.Column="2" Grid.Row="1" Content="Sample time (s):" Padding="0" Margin="5 0 0 0"
+				       VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Right"/>
+				<TextBox x:Name="SampleDuration" Grid.Column="3" Grid.Row="1" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="20"
+				         Margin="5 2" BorderBrush="#454545" PreviewTextInput="Uint32_OnPreviewTextInput"/>
+
+				<CheckBox x:Name="NormalizeCheckBox" Grid.Row="0" Grid.Column="4" Content="Normalize Audio" VerticalAlignment="Center" IsChecked="True"/>
+				<CheckBox x:Name="UseMkvMergeCheckBox" Grid.Row="1" Grid.Column="4" Content="Use mkvmerge" VerticalAlignment="Center"
+				          IsChecked="false" Checked="UseMkvMergeCheckBox_CheckChange"  Unchecked="UseMkvMergeCheckBox_CheckChange"/>
+			</Grid>
+		</Grid>
+
+        <!-- Console output -->
+		<RichTextBox x:Name="ExternalProcessOutputTextBox"
+	                 VerticalScrollBarVisibility="Visible" 
+	                 HorizontalScrollBarVisibility="Visible" 
+	                 IsReadOnly="True"
+	                 Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
+		    <FlowDocument/>
+	    </RichTextBox>
+
+        <!-- Results and plots -->
+		<WpfPlot Name="WpfPlotAudioWaves" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+		<Grid Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="200"/>
+			</Grid.ColumnDefinitions>
+
+			<WpfPlot Name="WpfPlotCrossCorrelation" Grid.Column="0"/>
+
+			<Grid Grid.Column="1" >
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="120"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+
+				<Label Grid.Row="0" Grid.Column="0" Content="Peak corr AA (gray):" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label Grid.Row="0" Grid.Column="1" Content="{Binding StatsMaxAA, FallbackValue=100}" ContentStringFormat="{}{0:0.######}" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label Grid.Row="1" Grid.Column="0" Content="Peak corr AB (green):" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label Grid.Row="1" Grid.Column="1" Content="{Binding StatsMaxAB, FallbackValue=100}" ContentStringFormat="{}{0:0.######}" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label Grid.Row="2" Grid.Column="0" Content="Match:" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label x:Name="CorrPercentLabel" Grid.Row="2" Grid.Column="1" Content="{Binding CorrPercent, FallbackValue=100}" ContentStringFormat="{}{0:0.##} %" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+			</Grid>
+		</Grid>
+
+        <!-- Process bar -->
+		<ProgressBar Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding ProgressPercent}"/>
+
+        <!-- Command buttons -->
+		<Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" >
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+			<Button x:Name="ProbeButton" Grid.Column="0" Click="Probe_OnClick" Content="Probe"/>
+			<Button x:Name="AnalyzeButton" Grid.Column="1" Click="Analyze_OnClick" Content="Analyze" IsEnabled="False"/>
+			<Button x:Name="MergeButton" Grid.Column="2" Click="Merge_OnClick" Content="Merge selected" IsEnabled="False"/>
+			<Button x:Name="AbortButton" Grid.Column="3" Click="Abort_OnClick" Content="Abort"/>
+			<Button Grid.Column="4" Click="OpenTempFolder_OnClick" Content="Temp folder"/>
+		</Grid>
+
+        <!-- Calculation results for audio sync -->
+		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" >
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="160"/>
+				<ColumnDefinition Width="200"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="60"/>
+			</Grid.ColumnDefinitions>
+
+			<Label Grid.Column="0" Content="Calculated _delay:" FontSize="20" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+			<Label x:Name="CalcDelayLabel" Grid.Column="1" FontSize="20" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
+		       Content="{Binding SyncDelay, FallbackValue=0.123}" ContentStringFormat="{}{0:0.####} s"/>
+
+			<Image x:Name="DelayIcon" Grid.Column="1" HorizontalAlignment="Right">
+				<Image.Source>
+					<DrawingImage>
+						<DrawingImage.Drawing>
+							<DrawingGroup ClipGeometry="M0,0 V2250 H2250 V0 H0 Z">
+								<GeometryDrawing Geometry="F0 M2250,2250z M0,0z M208.333,208.333L208.333,2083.333 208.333,208.333z">
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="166.67" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+								</GeometryDrawing>
+								<GeometryDrawing>
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+									<GeometryDrawing.Geometry>
+										<RectangleGeometry RadiusX="0" RadiusY="0" Rect="416.667,416.667,1666.67,625" />
+									</GeometryDrawing.Geometry>
+								</GeometryDrawing>
+								<GeometryDrawing>
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+									<GeometryDrawing.Geometry>
+										<RectangleGeometry RadiusX="0" RadiusY="0" Rect="416.667,1250,1666.67,625" />
+									</GeometryDrawing.Geometry>
+								</GeometryDrawing>
+								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
+								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
+							</DrawingGroup>
+						</DrawingImage.Drawing>
+					</DrawingImage>
+				</Image.Source>
+			</Image>
+
+			<Image x:Name="DelayIconAB" Grid.Column="1" HorizontalAlignment="Right" Visibility="Hidden">
+				<Image.Source>
+					<DrawingImage>
+						<DrawingImage.Drawing>
+							<DrawingGroup ClipGeometry="M0,0 V2250 H2250 V0 H0 Z">
+								<GeometryDrawing Geometry="F0 M2250,2250z M0,0z M208.333,208.333L208.333,2083.333 208.333,208.333z">
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="166.67" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+								</GeometryDrawing>
+								<GeometryDrawing>
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+									<GeometryDrawing.Geometry>
+										<RectangleGeometry RadiusX="0" RadiusY="0" Rect="416.667,416.667,1666.67,625" />
+									</GeometryDrawing.Geometry>
+								</GeometryDrawing>
+								<GeometryDrawing>
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+									<GeometryDrawing.Geometry>
+										<RectangleGeometry RadiusX="0" RadiusY="0" Rect="833.333,1250,1250,625" />
+									</GeometryDrawing.Geometry>
+								</GeometryDrawing>
+								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
+								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
+							</DrawingGroup>
+						</DrawingImage.Drawing>
+					</DrawingImage>
+				</Image.Source>
+			</Image>
+
+			<Image x:Name="DelayIconBA" Grid.Column="1" HorizontalAlignment="Right" Visibility="Hidden">
+				<Image.Source>
+					<DrawingImage>
+						<DrawingImage.Drawing>
+							<DrawingGroup ClipGeometry="M0,0 V2250 H2250 V0 H0 Z">
+								<GeometryDrawing Geometry="F0 M2250,2250z M0,0z M208.333,208.333L208.333,2083.333 208.333,208.333z">
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="166.67" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+								</GeometryDrawing>
+								<GeometryDrawing>
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+									<GeometryDrawing.Geometry>
+										<RectangleGeometry RadiusX="0" RadiusY="0" Rect="833.333,416.667,1250,625" />
+									</GeometryDrawing.Geometry>
+								</GeometryDrawing>
+								<GeometryDrawing>
+									<GeometryDrawing.Pen>
+										<Pen Brush="#FF000000" Thickness="125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+									</GeometryDrawing.Pen>
+									<GeometryDrawing.Geometry>
+										<RectangleGeometry RadiusX="0" RadiusY="0" Rect="416.667,1250,1666.67,625" />
+									</GeometryDrawing.Geometry>
+								</GeometryDrawing>
+								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
+								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
+							</DrawingGroup>
+						</DrawingImage.Drawing>
+					</DrawingImage>
+				</Image.Source>
+			</Image>
+
+			<Label x:Name="StatusLabel" Grid.Column="2" FontSize="20" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="Red"/>
+
+            <!-- Indicators if required tools were found, i.e. ffmpeg/mkvtoolnix -->
+            <Grid Grid.Column="3" >
+				<Grid.RowDefinitions>
+					<RowDefinition Height="13"/>
+					<RowDefinition Height="12"/>
+					<RowDefinition Height="13"/>
+				</Grid.RowDefinitions>
+				<Label x:Name="FfmpegAvailableState" Grid.Row="0" Content="ffmpeg" FontSize="8" VerticalAlignment="Center"
+				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+				<Label x:Name="FfprobeAvailableState" Grid.Row="1" Content="ffprobe" FontSize="8" VerticalAlignment="Center"
+				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+				<Label x:Name="MkvmergeAvailableState" Grid.Row="2" Content="mkvmerge" FontSize="8" VerticalAlignment="Center"
+				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+			</Grid>
+		</Grid>
+	</Grid>
+</Window>

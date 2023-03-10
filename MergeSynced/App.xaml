@@ -1,0 +1,16 @@
+﻿<Application x:Class="MergeSynced.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MergeSynced"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+		<!--To suppress:
+		System.Windows.Data Error: 4 : Cannot find source for binding with reference 'RelativeSource FindAncestor,
+		AncestorType='System.Windows.Controls.ItemsControl', AncestorLevel='1''. BindingExpression:Path=VerticalContentAlignment;
+		DataItem=null; target element is 'ComboBoxItem' (Name=''); target property is 'VerticalContentAlignment' (type 'VerticalAlignment') -->
+	    <Style TargetType="{x:Type ComboBoxItem}">
+			<Setter Property="HorizontalContentAlignment" Value="Left" />
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+		</Style>
+	</Application.Resources>
+</Application>
