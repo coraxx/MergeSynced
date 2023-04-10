@@ -19,8 +19,10 @@ using MergeSynced.Audio;
 using MergeSynced.Controls;
 using MergeSynced.Tools;
 using MergeSynced.ViewModels;
+using ScottPlot;
 using ScottPlot.Avalonia;
-using ScottPlot.Plottable;
+using ScottPlot.Plottables;
+using Colors = Avalonia.Media.Colors;
 
 namespace MergeSynced.Views
 {
@@ -46,6 +48,8 @@ namespace MergeSynced.Views
         private readonly bool _ffprobeExisting;
         private readonly bool _mkvmergeExisting;
 
+        private OperatingSystemType _osType;
+
         #endregion
 
         #region CTOR and base app events
@@ -55,6 +59,8 @@ namespace MergeSynced.Views
             InitializeComponent();
             Title = $"Merge Synced - v{Assembly.GetExecutingAssembly().GetName().Version.ToString().TrimEnd('0').TrimEnd('.')}";
             DataContext = MainViewModel;
+
+            _osType = AvaloniaLocator.Current.GetService<IRuntimePlatform>().GetRuntimeInfo().OperatingSystem;
 
             SampleStart.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput, RoutingStrategies.Tunnel);
             SampleDuration.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput, RoutingStrategies.Tunnel);
@@ -68,9 +74,21 @@ namespace MergeSynced.Views
             SetWpfPlotStatic(WpfPlotCrossCorrelation);
 
             // Check if ffmpeg and mkvmerge is available
-            _ffmpegExisting = SearchBinaryInPath("ffmpeg.exe");
-            _ffprobeExisting = SearchBinaryInPath("ffprobe.exe");
-            _mkvmergeExisting = SearchBinaryInPath("mkvmerge.exe");
+            switch (_osType)
+            {
+                case OperatingSystemType.WinNT:
+                    _ffmpegExisting = SearchBinaryInPath("ffmpeg.exe");
+                    _ffprobeExisting = SearchBinaryInPath("ffprobe.exe");
+                    _mkvmergeExisting = SearchBinaryInPath("mkvmerge.exe");
+                    break;
+
+                case OperatingSystemType.OSX:
+                case OperatingSystemType.Linux:
+                    _ffmpegExisting = SearchBinaryInPath("ffmpeg");
+                    _ffprobeExisting = SearchBinaryInPath("ffprobe");
+                    _mkvmergeExisting = SearchBinaryInPath("mkvmerge");
+                    break;
+            }
 
 
             if (_ffmpegExisting)
@@ -104,17 +122,19 @@ namespace MergeSynced.Views
 
         private static void SetWpfPlotStatic(AvaPlot wpfPlot)
         {
-            wpfPlot.Plot.Frameless();
-            wpfPlot.Plot.Grid(false);
+            wpfPlot.Plot.XAxes.ForEach(x => x.IsVisible = false);
+            wpfPlot.Plot.YAxes.ForEach(x => x.IsVisible = false);
+            wpfPlot.Plot.Grids.Clear();
             //wpfPlot.Plot.Style(ScottPlot.Style.Gray1);
-            wpfPlot.Configuration.LeftClickDragPan = false;
-            wpfPlot.Configuration.RightClickDragZoom = false;
-            wpfPlot.Configuration.DoubleClickBenchmark = false;
-            wpfPlot.Configuration.MiddleClickAutoAxis = false;
-            wpfPlot.Configuration.MiddleClickDragZoom = false;
-            wpfPlot.Configuration.ScrollWheelZoom = false;
-            wpfPlot.Configuration.LockHorizontalAxis = true;
-            wpfPlot.Configuration.LockVerticalAxis = true;
+            
+            //wpfPlot.Configuration.LeftClickDragPan = false;
+            //wpfPlot.Configuration.RightClickDragZoom = false;
+            //wpfPlot.Configuration.DoubleClickBenchmark = false;
+            //wpfPlot.Configuration.MiddleClickAutoAxis = false;
+            //wpfPlot.Configuration.MiddleClickDragZoom = false;
+            //wpfPlot.Configuration.ScrollWheelZoom = false;
+            //wpfPlot.Configuration.LockHorizontalAxis = true;
+            //wpfPlot.Configuration.LockVerticalAxis = true;
             wpfPlot.Refresh();
         }
 
@@ -131,7 +151,18 @@ namespace MergeSynced.Views
 
             if (pathData == null) return false;
 
-            string[] paths = pathData.Split(';');
+            string[]? paths = new string[] { };
+            switch (_osType)
+            {
+                case OperatingSystemType.WinNT:
+                    paths = pathData.Split(';');
+                    break;
+
+                case OperatingSystemType.OSX:
+                case OperatingSystemType.Linux:
+                    paths = pathData.Split(':');
+                    break;
+            }
 
             return paths.Any(path => File.Exists(Path.Combine(path, binaryName)));
         }
@@ -280,25 +311,25 @@ namespace MergeSynced.Views
             MergeButton.IsEnabled = false;
 
             // Clear Data
-            Annotation graphLabel = WpfPlotAudioWaves.Plot.AddAnnotation("Updating", WpfPlotAudioWaves.Bounds.Width * 0.5 - 40, WpfPlotAudioWaves.Bounds.Height * 0.5 - 10);
-            graphLabel.Font.Size = 24;
-            graphLabel.Font.Name = "Impact";
-            graphLabel.Font.Color = System.Drawing.Color.Red;
-            graphLabel.Shadow = false;
-            graphLabel.BackgroundColor = System.Drawing.Color.FromArgb(100, System.Drawing.Color.DimGray);
-            graphLabel.BorderWidth = 2;
-            graphLabel.BorderColor = System.Drawing.Color.Red;
-            WpfPlotAudioWaves.Refresh();
+            //Annotation graphLabel = WpfPlotAudioWaves.Plot.Add.Annotation("Updating", WpfPlotAudioWaves.Bounds.Width * 0.5 - 40, WpfPlotAudioWaves.Bounds.Height * 0.5 - 10);
+            //graphLabel.Font.Size = 24;
+            //graphLabel.Font.Name = "Impact";
+            //graphLabel.Font.Color = System.Drawing.Color.Red;
+            //graphLabel.Shadow = false;
+            //graphLabel.BackgroundColor = System.Drawing.Color.FromArgb(100, System.Drawing.Color.DimGray);
+            //graphLabel.BorderWidth = 2;
+            //graphLabel.BorderColor = System.Drawing.Color.Red;
+            //WpfPlotAudioWaves.Refresh();
 
-            graphLabel = WpfPlotCrossCorrelation.Plot.AddAnnotation("Updating", WpfPlotCrossCorrelation.Bounds.Width * 0.5 - 40, WpfPlotCrossCorrelation.Bounds.Height * 0.5 - 10);
-            graphLabel.Font.Size = 24;
-            graphLabel.Font.Name = "Impact";
-            graphLabel.Font.Color = System.Drawing.Color.Red;
-            graphLabel.Shadow = false;
-            graphLabel.BackgroundColor = System.Drawing.Color.FromArgb(100, System.Drawing.Color.DimGray);
-            graphLabel.BorderWidth = 2;
-            graphLabel.BorderColor = System.Drawing.Color.Red;
-            WpfPlotCrossCorrelation.Refresh();
+            //graphLabel = WpfPlotCrossCorrelation.Plot.AddAnnotation("Updating", WpfPlotCrossCorrelation.Bounds.Width * 0.5 - 40, WpfPlotCrossCorrelation.Bounds.Height * 0.5 - 10);
+            //graphLabel.Font.Size = 24;
+            //graphLabel.Font.Name = "Impact";
+            //graphLabel.Font.Color = System.Drawing.Color.Red;
+            //graphLabel.Shadow = false;
+            //graphLabel.BackgroundColor = System.Drawing.Color.FromArgb(100, System.Drawing.Color.DimGray);
+            //graphLabel.BorderWidth = 2;
+            //graphLabel.BorderColor = System.Drawing.Color.Red;
+            //WpfPlotCrossCorrelation.Refresh();
 
             ExternalProcessOutputTextBox.Clear();
 
@@ -440,17 +471,18 @@ namespace MergeSynced.Views
                 }
             }
             MainViewModel.ProgressPercent = 75;
-
+            byte transparency = 200;
             // Draw audio wave lines
             await Dispatcher.UIThread.InvokeAsync(new Action(() => {
                 WpfPlotAudioWaves.Plot.Clear();
                 // ReSharper disable once AccessToModifiedClosure
-                SignalPlot sig = WpfPlotAudioWaves.Plot.AddSignal(Array.ConvertAll(l1, Convert.ToDouble));
-                sig.Color = System.Drawing.Color.FromArgb(0x90, sig.Color.R, sig.Color.G, sig.Color.B);
+                Signal sig = WpfPlotAudioWaves.Plot.Add.Signal(Array.ConvertAll(l1, Convert.ToDouble));
+                sig.LineStyle.Color = new ScottPlot.Color(sig.LineStyle.Color.Red, sig.LineStyle.Color.Green, sig.LineStyle.Color.Blue, transparency);
                 // ReSharper disable once AccessToModifiedClosure
-                sig = WpfPlotAudioWaves.Plot.AddSignal(Array.ConvertAll(l2, Convert.ToDouble));
-                sig.Color = System.Drawing.Color.FromArgb(0x90, sig.Color.R, sig.Color.G, sig.Color.B);
+                sig = WpfPlotAudioWaves.Plot.Add.Signal(Array.ConvertAll(l2, Convert.ToDouble));
+                sig.LineStyle.Color = new ScottPlot.Color(sig.LineStyle.Color.Red, sig.LineStyle.Color.Green, sig.LineStyle.Color.Blue, transparency);
                 WpfPlotAudioWaves.Refresh();
+                WpfPlotAudioWaves.Plot.AutoScale();
             }));
 
             // Padding data
@@ -473,9 +505,8 @@ namespace MergeSynced.Views
             await Dispatcher.UIThread.InvokeAsync(new Action(() => {
                 WpfPlotCrossCorrelation.Plot.Clear();
                 // ReSharper disable once AccessToModifiedClosure
-                SignalPlot sig = WpfPlotCrossCorrelation.Plot.AddSignal(Array.ConvertAll(corr, Convert.ToDouble));
-                sig.Color = System.Drawing.Color.DimGray;
-                sig.Color = System.Drawing.Color.FromArgb(0x90, sig.Color.R, sig.Color.G, sig.Color.B);
+                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr, Convert.ToDouble));
+                sig.LineStyle.Color = new ScottPlot.Color(Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B, transparency);
                 WpfPlotCrossCorrelation.Refresh();
             }));
 
@@ -489,10 +520,9 @@ namespace MergeSynced.Views
 
             await Dispatcher.UIThread.InvokeAsync(new Action(() =>
             {
-                SignalPlot sig = WpfPlotCrossCorrelation.Plot.AddSignal(Array.ConvertAll(corr, Convert.ToDouble));
-                sig.Color = System.Drawing.Color.LimeGreen;
-                sig.Color = System.Drawing.Color.FromArgb(0x90, sig.Color.R, sig.Color.G, sig.Color.B);
-                WpfPlotCrossCorrelation.Plot.AxisAuto();
+                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr, Convert.ToDouble));
+                sig.LineStyle.Color = new ScottPlot.Color(Colors.LimeGreen.R, Colors.LimeGreen.G, Colors.LimeGreen.B, transparency);
+                WpfPlotCrossCorrelation.Plot.AutoScale();
                 WpfPlotCrossCorrelation.Refresh();
             }));
             DebugTimeSpan("plotting");
@@ -516,6 +546,8 @@ namespace MergeSynced.Views
             ProbeButton.IsEnabled = false;
             AnalyzeButton.IsEnabled = false;
 
+            bool useMkvChecked = UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked;
+
             // Check A selection
             bool nothingChecked = true;
             foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataA.ListBoxItems)
@@ -536,7 +568,7 @@ namespace MergeSynced.Views
                 return;
             }
 
-            if (!_mkvmergeExisting)
+            if (!_mkvmergeExisting && useMkvChecked)
             {
                 SwitchButtonState(MergeButton, false, "No mkvmerge in PATH", true);
                 return;
@@ -578,7 +610,7 @@ namespace MergeSynced.Views
 
             // Build command line argument
             // Using mkvmerge /////////////////////////////////////////////////////////////////////////////////////////
-            if (UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked)
+            if (useMkvChecked)
             {
                 string delayFormatted = Convert.ToInt32(Math.Round(-1 * MainViewModel.SyncDelay * 1000)).ToString(); // Delay has to be inverted and in ms
                 string args = $"--output \"{FilePathOut.Text}\"";
@@ -798,9 +830,7 @@ namespace MergeSynced.Views
         {
             try
             {
-                OperatingSystemType osType = AvaloniaLocator.Current.GetService<IRuntimePlatform>().GetRuntimeInfo().OperatingSystem;
-
-                switch (osType)
+                switch (_osType)
                 {
                     case OperatingSystemType.WinNT:
                         Process.Start("explorer.exe", _workingDir);

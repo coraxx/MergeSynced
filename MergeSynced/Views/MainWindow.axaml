@@ -162,13 +162,17 @@
 
 			<scottPlot:AvaPlot Name="WpfPlotCrossCorrelation" Grid.Column="0"/>
 
-			<Grid Grid.Column="1" ColumnDefinitions="120,*" RowDefinitions="*,*,*">
+			<Grid Grid.Column="1" ColumnDefinitions="130,*" RowDefinitions="*,*,*">
 				<Label Grid.Row="0" Grid.Column="0" Content="Peak corr AA (gray):" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
-				<Label Grid.Row="0" Grid.Column="1" Content="{Binding  StatsMaxAA, StringFormat={}{0:0.######}, FallbackValue=100}"  VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label Grid.Row="0" Grid.Column="1" Content="{Binding  StatsMaxAa, StringFormat={}{0:0.######}, FallbackValue=100}"
+                       FontSize="12"  VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 				<Label Grid.Row="1" Grid.Column="0" Content="Peak corr AB (green):" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
-				<Label Grid.Row="1" Grid.Column="1" Content="{Binding  StatsMaxAB, StringFormat={}{0:0.######}, FallbackValue=100}" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label Grid.Row="1" Grid.Column="1" Content="{Binding  StatsMaxAb, StringFormat={}{0:0.######}, FallbackValue=100}"
+                       FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 				<Label Grid.Row="2" Grid.Column="0" Content="Match:" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
-				<Label x:Name="CorrPercentLabel" Foreground="{Binding CorrPercentColor}" Grid.Row="2" Grid.Column="1" Content="{Binding  CorrPercent, StringFormat={}{0:0.##} %, FallbackValue=100}" FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+				<Label x:Name="CorrPercentLabel" Grid.Row="2" Grid.Column="1" Foreground="{Binding CorrPercentColor}"
+                       Content="{Binding  CorrPercent, StringFormat={}{0:0.##} %, FallbackValue=100}"
+                       FontSize="12" VerticalAlignment="Center" VerticalContentAlignment="Center"/>
 			</Grid>
 		</Grid>
 
