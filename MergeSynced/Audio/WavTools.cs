@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace MergeSynced
+namespace MergeSynced.Audio
 {
-    public class Audio
+    public class WavTools
     {
         /// <summary>
         /// Read wave file. Code from https://stackoverflow.com/questions/8754111/how-to-read-the-data-in-a-wav-file-to-an-array/11162668#11162668
@@ -290,14 +290,5 @@ namespace MergeSynced
                 return null;
             }
         }
-    }
-
-    public class WavHeader
-    {
-        public int FileSize;
-        public int RiffType;
-        public int Channels;
-        public int BitDepth;
-        public int SampleRate;
     }
 }

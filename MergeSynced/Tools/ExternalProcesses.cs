@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Windows.Controls;
-using System.Windows.Media;
+using Avalonia.Controls;
+using Avalonia.Media;
+using MergeSynced.Controls;
 using Newtonsoft.Json.Linq;
 
-namespace MergeSynced
+namespace MergeSynced.Tools
 {
     /// <summary>
     /// Calling external tools ffmpeg and mkvtoolnix to probe and merge input files.
@@ -37,7 +38,7 @@ namespace MergeSynced
 
         #region ffmpeg
 
-        public void CallFfmpeg(string args, DataReceivedEventHandler outputHandler, string workingDir=@"C:\temp")
+        public void CallFfmpeg(string args, DataReceivedEventHandler outputHandler, string workingDir = @"C:\temp")
         {
             if (FfmpegProcess != null)
             {
@@ -156,14 +157,14 @@ namespace MergeSynced
 
                     cb.LanguageId = language;
                     cb.CodecType = stream["codec_type"]?.ToString();
-                    cb.Content = streamInfo;
-                    cb.IsChecked = md.IsMainMedia;
+                    cb.Description = streamInfo;
+                    cb.IsSelected = md.IsMainMedia;
 
                     // Color code
                     switch (cb.CodecType)
                     {
                         case "audio":
-                            cb.Background = new SolidColorBrush(Colors.LimeGreen);
+                            cb.TypeBrush = new SolidColorBrush(Colors.LimeGreen);
                             ComboBoxItem co = new ComboBoxItem
                             {
                                 Content = cb.Index.ToString(),
@@ -173,10 +174,10 @@ namespace MergeSynced
                             audioTrackSelected = true;
                             break;
                         case "subtitle":
-                            cb.Background = new SolidColorBrush(Colors.Yellow);
+                            cb.TypeBrush = new SolidColorBrush(Colors.Yellow);
                             break;
                         case "video":
-                            cb.Background = new SolidColorBrush(Colors.DodgerBlue);
+                            cb.TypeBrush = new SolidColorBrush(Colors.DodgerBlue);
                             break;
                     }
 
@@ -266,7 +267,7 @@ namespace MergeSynced
             }
 
             MkvmergeWasAborted = true;
-            
+
             return true;
         }
 
@@ -354,7 +355,7 @@ namespace MergeSynced
                 {
                     CheckBoxMedia cb = new CheckBoxMedia
                     {
-                        IsChecked = md.IsMainMedia
+                        IsSelected = md.IsMainMedia
                     };
                     string codecName = stream["codec"]?.ToString();
                     if (stream["properties"] != null)
@@ -372,14 +373,14 @@ namespace MergeSynced
                     cb.CodecType = stream["type"]?.ToString();
 
                     string streamInfo = $"idx: {cb.Index}; type: {cb.CodecType}; codec: {codecName}; language: {cb.LanguageId};";
-                    cb.Content = streamInfo;
+                    cb.Description = streamInfo;
                     Debug.WriteLine(streamInfo);
 
                     // Color code
                     switch (cb.CodecType)
                     {
                         case "audio":
-                            cb.Background = new SolidColorBrush(Colors.LimeGreen);
+                            cb.TypeBrush = new SolidColorBrush(Colors.LimeGreen);
                             ComboBoxItem co = new ComboBoxItem
                             {
                                 Content = cb.Index.ToString(),
@@ -389,10 +390,10 @@ namespace MergeSynced
                             audioTrackSelected = true;
                             break;
                         case "subtitles":
-                            cb.Background = new SolidColorBrush(Colors.Yellow);
+                            cb.TypeBrush = new SolidColorBrush(Colors.Yellow);
                             break;
                         case "video":
-                            cb.Background = new SolidColorBrush(Colors.DodgerBlue);
+                            cb.TypeBrush = new SolidColorBrush(Colors.DodgerBlue);
                             break;
                     }
 
@@ -407,15 +408,15 @@ namespace MergeSynced
                             if (stream["num_entries"] == null || stream["num_entries"].ToObject<int>() <= 0) continue;
                             CheckBoxMedia cb = new CheckBoxMedia
                             {
-                                IsChecked = md.IsMainMedia,
+                                IsSelected = md.IsMainMedia,
                                 CodecType = "chapters",
                                 Index = 0,
-                                Content = $"idx: n/a; type: chapters; entries: {stream["num_entries"]}",
-                                Background = new SolidColorBrush(Colors.Silver)
+                                Description = $"idx: n/a; type: chapters; entries: {stream["num_entries"]}",
+                                TypeBrush = new SolidColorBrush(Colors.Silver)
                             };
                             md.ListBoxItems.Add(cb);
                         }
-                        
+
                     }
 
                     if (json["attachments"] != null)
@@ -425,10 +426,10 @@ namespace MergeSynced
                             if (stream["file_name"] == null || stream["id"] == null) continue;
                             CheckBoxMedia cb = new CheckBoxMedia
                             {
-                                IsChecked = md.IsMainMedia,
+                                IsSelected = md.IsMainMedia,
                                 CodecType = "attachments",
-                                Content = $"idx: {stream["id"]}; type: attachments; file name: {stream["file_name"]}",
-                                Background = new SolidColorBrush(Colors.DeepPink)
+                                Description = $"idx: {stream["id"]}; type: attachments; file name: {stream["file_name"]}",
+                                TypeBrush = new SolidColorBrush(Colors.DeepPink)
                             };
                             if (int.TryParse(stream["id"]?.ToString(), out int index))
                             {
