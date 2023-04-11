@@ -19,7 +19,6 @@ using MergeSynced.Audio;
 using MergeSynced.Controls;
 using MergeSynced.Tools;
 using MergeSynced.ViewModels;
-using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using Colors = Avalonia.Media.Colors;

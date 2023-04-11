@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -20,6 +21,11 @@ namespace MergeSynced
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private void AboutMenuItem_OnClick(object? sender, EventArgs e)
+        {
+            return;
         }
     }
 }

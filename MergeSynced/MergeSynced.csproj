@@ -8,6 +8,10 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0</FileVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\MergeSyncedLogoSimple.ico</ApplicationIcon>
+    <CFBundleName>Merge Synced</CFBundleName>
+    <CFBundleShortVersionString>2.0.0</CFBundleShortVersionString>
+    <CFBundleIconFile>Assets/MergeSyncedLogoSimple.icns</CFBundleIconFile>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\MergeSyncedLogo.ico" />
@@ -20,6 +24,9 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\MergeSyncedLogoSimple.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\MergeSyncedLogoSimple.ico" />
+  </ItemGroup>
 
 
   <ItemGroup>
@@ -27,6 +34,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.10.19" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.19" />
+    <PackageReference Include="Dotnet.Bundle" Version="0.9.13" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
@@ -45,5 +53,12 @@
     <Reference Include="ScottPlot.Avalonia">
       <HintPath>..\Libs\ScottPlot.Avalonia.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="Assets\MergeSyncedLogoSimple.icns">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
