@@ -150,16 +150,26 @@ namespace MergeSynced.Views
 
             if (pathData == null) return false;
 
-            string[]? paths = new string[] { };
+            List<string>? paths = new List<string>();
             switch (_osType)
             {
                 case OperatingSystemType.WinNT:
-                    paths = pathData.Split(';');
+                    paths = pathData.Split(';').ToList();
                     break;
 
                 case OperatingSystemType.OSX:
+                    paths = pathData.Split(':').ToList();
+                    // If .app bundle is called, current user PATH is normally not passed in, so try a few common ones
+                    paths.Add("/opt/homebrew/bin");
+                    paths.Add("/opt/homebrew/sbin");
+                    paths.Add("/bin");
+                    paths.Add("/usr/bin");
+                    paths.Add("/usr/sbin");
+                    paths.Add("/usr/local/bin");
+                    break;
+
                 case OperatingSystemType.Linux:
-                    paths = pathData.Split(':');
+                    paths = pathData.Split(':').ToList();
                     break;
             }
 
