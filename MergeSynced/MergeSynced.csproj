@@ -9,16 +9,22 @@
     <FileVersion>2.0.0</FileVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\MergeSyncedLogoSimple.ico</ApplicationIcon>
-    <CFBundleName>Merge Synced</CFBundleName>
+    <CFBundleName>MergeSynced</CFBundleName>
+    <CFBundleDisplayName>MergeSynced</CFBundleDisplayName>
+    <CFBundleExecutable>MergeSynced</CFBundleExecutable>
+    <CFBundleIdentifier>com.coraxx.mergesynced</CFBundleIdentifier>
+    <CFBundlePackageType>APPL</CFBundlePackageType>
+    <CFBundleSignature>????</CFBundleSignature>
+    <CFBundleVersion>2.0.0</CFBundleVersion>
     <CFBundleShortVersionString>2.0.0</CFBundleShortVersionString>
     <CFBundleIconFile>Assets/MergeSyncedLogoSimple.icns</CFBundleIconFile>
+    <NSHighResolutionCapable>true</NSHighResolutionCapable>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\MergeSyncedLogo.ico" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\MergeSyncedLogo.ico">
-      <CopyToOutputDirectory></CopyToOutputDirectory>
     </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
