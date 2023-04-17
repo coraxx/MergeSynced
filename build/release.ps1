@@ -75,3 +75,4 @@ Remove-Item -Recurse -Force .\bin\Release\net7.0\win-arm64
 # Remove-Item -Recurse -Force ..\build\MergeSynced
 # Remove-Item -Recurse -Force .\bin\Release\net7.0\linux-arm64
 
+dotnet clean

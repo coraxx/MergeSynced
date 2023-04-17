@@ -36,10 +36,10 @@ namespace MergeSynced.Views
         private readonly ExternalProcesses _ep = new ExternalProcesses();
 
         private readonly Regex _reTime = new Regex(@"time=\s*([0-9\.:]*)", RegexOptions.IgnoreCase);
-        private Match _timeMatchFfmpegProg;
+        private Match _timeMatchFfmpegProg = null!;
         private TimeSpan _currentTimeFfmpegProg;
 
-        private readonly string _workingDir;
+        private readonly string _workingDir = null!;
 
         private const int ProbeLengthInSeconds = 20;
 
@@ -56,17 +56,17 @@ namespace MergeSynced.Views
         public MainWindow()
         {
             InitializeComponent();
-            Title = $"Merge Synced - v{Assembly.GetExecutingAssembly().GetName().Version.ToString().TrimEnd('0').TrimEnd('.')}";
+            Title = $"Merge Synced - v{Assembly.GetExecutingAssembly().GetName().Version?.ToString().TrimEnd('0').TrimEnd('.')}";
             DataContext = MainViewModel;
 
-            _osType = AvaloniaLocator.Current.GetService<IRuntimePlatform>().GetRuntimeInfo().OperatingSystem;
+            _osType = AvaloniaLocator.Current.GetService<IRuntimePlatform>()!.GetRuntimeInfo().OperatingSystem;
 
-            SampleStart.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput, RoutingStrategies.Tunnel);
-            SampleDuration.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput, RoutingStrategies.Tunnel);
+            SampleStart.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput!, RoutingStrategies.Tunnel);
+            SampleDuration.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput!, RoutingStrategies.Tunnel);
 
-            FilePathA.AddHandler(DragDrop.DropEvent, File_Drop, RoutingStrategies.Bubble);
-            FilePathB.AddHandler(DragDrop.DropEvent, File_Drop, RoutingStrategies.Bubble);
-            FilePathOut.AddHandler(DragDrop.DropEvent, File_Drop, RoutingStrategies.Bubble);
+            FilePathA.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
+            FilePathB.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
+            FilePathOut.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
 
             // Plot without interaction
             SetWpfPlotStatic(WpfPlotAudioWaves);
@@ -146,7 +146,7 @@ namespace MergeSynced.Views
 
         private bool SearchBinaryInPath(string binaryName)
         {
-            string pathData = Environment.GetEnvironmentVariable("PATH");
+            string? pathData = Environment.GetEnvironmentVariable("PATH");
 
             if (pathData == null) return false;
 
@@ -263,7 +263,7 @@ namespace MergeSynced.Views
             else
             {
                 _ep.CallFfprobe(FilePathA.Text, _workingDir);
-                await _ep.FfprobeProcess.WaitForExitAsync();
+                await _ep.FfprobeProcess!.WaitForExitAsync();
 
                 MainViewModel.ProgressPercent = 25;
                 result = _ep.ParseFfprobeJson(MainViewModel.MediaDataA);
@@ -342,7 +342,7 @@ namespace MergeSynced.Views
 
             ExternalProcessOutputTextBox.Clear();
 
-            if (MainViewModel.MediaDataA.Duration.TotalSeconds == 0)
+            if (MainViewModel.MediaDataA!.Duration.TotalSeconds == 0)
             {
                 ProbeButton.IsEnabled = true;
                 SwitchButtonState(AnalyzeButton, false, "Total seconds is 0 for input A", true);
@@ -350,7 +350,7 @@ namespace MergeSynced.Views
                 return;
             }
 
-            if (MainViewModel.MediaDataB.Duration.TotalSeconds == 0)
+            if (MainViewModel.MediaDataB!.Duration.TotalSeconds == 0)
             {
                 ProbeButton.IsEnabled = true;
                 SwitchButtonState(AnalyzeButton, false, "Total seconds is 0 for input B", true);
@@ -366,8 +366,8 @@ namespace MergeSynced.Views
             string args;
 
             // A
-            ComboBoxItem co = SelectTrackA.SelectedItem as ComboBoxItem;
-            int selectedTrack = int.Parse(co != null ? co.Content.ToString() : "0");
+            ComboBoxItem? co = SelectTrackA.SelectedItem as ComboBoxItem;
+            int selectedTrack = int.Parse((co != null ? co.Content.ToString() : "0")!);
             string inputA = Path.Combine(_workingDir, "inputA.wav");
 
             if (MainViewModel.MediaDataA.Duration.TotalSeconds > sampleDurationSeconds)
@@ -384,7 +384,7 @@ namespace MergeSynced.Views
                 Debug.Print(args);
                 _ep.CallFfmpeg(args, FfmpegOutputHandler, _workingDir);
             }
-            await _ep.FfmpegProcess.WaitForExitAsync();
+            await _ep.FfmpegProcess!.WaitForExitAsync();
 
             if (_ep.FfmpegProcess.ExitCode > 0)
             {
@@ -397,7 +397,7 @@ namespace MergeSynced.Views
 
             // B
             co = SelectTrackB.SelectedItem as ComboBoxItem;
-            selectedTrack = int.Parse(co != null ? co.Content.ToString() : "0");
+            selectedTrack = int.Parse((co != null ? co.Content.ToString() : "0")!);
             string inputB = Path.Combine(_workingDir, "inputB.wav");
 
             if (MainViewModel.MediaDataB.Duration.TotalSeconds > sampleDurationSeconds)
@@ -426,9 +426,9 @@ namespace MergeSynced.Views
 
             // Load generated audio files
             WavTools wt = new WavTools();
-            WavHeader headerA = wt.ReadWav(inputA, out float[] l1);
+            WavHeader? headerA = wt.ReadWav(inputA, out float[]? l1);
             MainViewModel.ProgressPercent = 65;
-            WavHeader headerB = wt.ReadWav(inputB, out float[] l2);
+            WavHeader? headerB = wt.ReadWav(inputB, out float[]? l2);
             MainViewModel.ProgressPercent = 70;
 
             DebugTimeSpan("reading wav files");
@@ -506,15 +506,15 @@ namespace MergeSynced.Views
             MainViewModel.ProgressPercent = 80;
 
             // Cross correlate to itself in order to display a proper fit percentage
-            float[] corr = null;
+            float[]? corr = null;
             await Task.Run(() => Analysis.CrossCorrelation(l1, l1, out corr));
-            MainViewModel.StatsMaxAa = corr.Max();
+            MainViewModel.StatsMaxAa = corr!.Max();
             MainViewModel.ProgressPercent = 85;
 
             await Dispatcher.UIThread.InvokeAsync(new Action(() => {
                 WpfPlotCrossCorrelation.Plot.Clear();
                 // ReSharper disable once AccessToModifiedClosure
-                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr, Convert.ToDouble));
+                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr!, Convert.ToDouble));
                 sig.LineStyle.Color = new ScottPlot.Color(Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B, transparency);
                 WpfPlotCrossCorrelation.Refresh();
             }));
@@ -522,14 +522,14 @@ namespace MergeSynced.Views
             // Do cross correlation between A and B
             corr = null;
             await Task.Run(() => Analysis.CrossCorrelation(l1, l2, out corr));
-            MainViewModel.StatsMaxAb = corr.Max();
+            MainViewModel.StatsMaxAb = corr!.Max();
             MainViewModel.CorrPercent = MainViewModel.StatsMaxAa > 0 ? 100 / MainViewModel.StatsMaxAa * MainViewModel.StatsMaxAb : 0;
             DebugTimeSpan("cross correlation");
             MainViewModel.ProgressPercent = 90;
 
             await Dispatcher.UIThread.InvokeAsync(new Action(() =>
             {
-                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr, Convert.ToDouble));
+                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr!, Convert.ToDouble));
                 sig.LineStyle.Color = new ScottPlot.Color(Colors.LimeGreen.R, Colors.LimeGreen.G, Colors.LimeGreen.B, transparency);
                 WpfPlotCrossCorrelation.Plot.AutoScale();
                 WpfPlotCrossCorrelation.Refresh();
@@ -559,7 +559,7 @@ namespace MergeSynced.Views
 
             // Check A selection
             bool nothingChecked = true;
-            foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataA.ListBoxItems)
+            foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataA?.ListBoxItems!)
             {
                 if (listBoxItem?.IsSelected != null) nothingChecked = nothingChecked && !(bool)listBoxItem.IsSelected;
             }
@@ -585,7 +585,7 @@ namespace MergeSynced.Views
 
             // Check B selection
             nothingChecked = true;
-            foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataB.ListBoxItems)
+            foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataB!.ListBoxItems)
             {
                 if (listBoxItem?.IsSelected != null) nothingChecked = nothingChecked && !(bool)listBoxItem.IsSelected;
             }
@@ -818,7 +818,7 @@ namespace MergeSynced.Views
                 ExternalProcessOutputTextBox.Clear();
 
                 _ep.CallFfmpeg(args, FfmpegOutputHandler, _workingDir);
-                await _ep.FfmpegProcess.WaitForExitAsync();
+                await _ep.FfmpegProcess!.WaitForExitAsync();
 
                 SwitchButtonState(MergeButton, false,
                     _ep.FfmpegWasAborted || _ep.FfmpegProcess.ExitCode > 0 ? "ffmpeg process aborted" : "Merge done",
@@ -909,8 +909,8 @@ namespace MergeSynced.Views
 
         private void ClearProbeData()
         {
-            MainViewModel.MediaDataA.Clear();
-            MainViewModel.MediaDataB.Clear();
+            MainViewModel.MediaDataA?.Clear();
+            MainViewModel.MediaDataB?.Clear();
 
             MainViewModel.SyncDelay = 0;
             MainViewModel.ProgressPercent = 0;
@@ -931,8 +931,8 @@ namespace MergeSynced.Views
                 //FilePathB.AllowDrop = !blocked;
                 ProbeButton.IsEnabled = !blocked &&
                                         (UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked && _mkvmergeExisting || _ffprobeExisting);
-                SelectTrackA.IsEnabled = !blocked && MainViewModel.MediaDataA.ComboBoxItems.Count > 0;
-                SelectTrackB.IsEnabled = !blocked && MainViewModel.MediaDataB.ComboBoxItems.Count > 0;
+                SelectTrackA.IsEnabled = !blocked && MainViewModel.MediaDataA!.ComboBoxItems.Count > 0;
+                SelectTrackB.IsEnabled = !blocked && MainViewModel.MediaDataB!.ComboBoxItems.Count > 0;
             }));
 
             Dispatcher.UIThread.InvokeAsync(new Action(() => {
@@ -966,7 +966,7 @@ namespace MergeSynced.Views
             {
                 //Debug.WriteLine(_timeMatchFfmpegProg.Groups[1]);
                 _currentTimeFfmpegProg = TimeSpan.Parse(_timeMatchFfmpegProg.Groups[1].Value, new CultureInfo("en-us"));
-                Debug.WriteLine($"{MainViewModel.MediaDataA.Duration - _currentTimeFfmpegProg} remaining");
+                Debug.WriteLine($"{MainViewModel.MediaDataA!.Duration - _currentTimeFfmpegProg} remaining");
 
                 MainViewModel.ProgressPercent = 100 - (MainViewModel.MediaDataA.Duration.TotalSeconds - _currentTimeFfmpegProg.TotalSeconds) / MainViewModel.MediaDataA.Duration.TotalSeconds * 100;
             }
@@ -1009,7 +1009,7 @@ namespace MergeSynced.Views
             switch (tb.Name)
             {
                 case "FilePathA":
-                    MainViewModel.MediaDataA.Clear();
+                    MainViewModel.MediaDataA?.Clear();
 
                     MainViewModel.SyncDelay = 0;
                     MainViewModel.ProgressPercent = 0;
@@ -1019,7 +1019,7 @@ namespace MergeSynced.Views
                     ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
                     break;
                 case "FilePathB":
-                    MainViewModel.MediaDataB.Clear();
+                    MainViewModel.MediaDataB?.Clear();
 
                     MainViewModel.SyncDelay = 0;
                     MainViewModel.ProgressPercent = 0;
@@ -1065,7 +1065,7 @@ namespace MergeSynced.Views
         private void Uint32_OnPreviewTextInput(object sender, TextInputEventArgs e)
         {
             if (!(e.Source is TextBox tb)) return;
-            string str = tb.Text.Insert(tb.CaretIndex, e.Text);
+            string str = tb.Text.Insert(tb.CaretIndex, e.Text!);
             e.Handled = !uint.TryParse(str, out _);
         }
 

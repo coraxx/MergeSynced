@@ -6,18 +6,18 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <PublishSingleFile>true</PublishSingleFile>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0</FileVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\MergeSyncedLogoSimple.ico</ApplicationIcon>
+    <AssemblyVersion>2.0.1.0</AssemblyVersion>
+    <FileVersion>2.0.1</FileVersion>
+    <CFBundleVersion>2.0.1</CFBundleVersion>
+    <CFBundleShortVersionString>2.0.1</CFBundleShortVersionString>
     <CFBundleName>MergeSynced</CFBundleName>
     <CFBundleDisplayName>MergeSynced</CFBundleDisplayName>
     <CFBundleExecutable>MergeSynced</CFBundleExecutable>
     <CFBundleIdentifier>com.coraxx.mergesynced</CFBundleIdentifier>
     <CFBundlePackageType>APPL</CFBundlePackageType>
     <CFBundleSignature>????</CFBundleSignature>
-    <CFBundleVersion>2.0.0</CFBundleVersion>
-    <CFBundleShortVersionString>2.0.0</CFBundleShortVersionString>
     <CFBundleIconFile>Assets/MergeSyncedLogoSimple.icns</CFBundleIconFile>
     <NSHighResolutionCapable>true</NSHighResolutionCapable>
   </PropertyGroup>

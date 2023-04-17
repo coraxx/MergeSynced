@@ -12,9 +12,9 @@ namespace MergeSynced.ViewModels
 
         #region Items
 
-        public MediaData MediaDataA { get; } = new MediaData { IsMainMedia = true };
+        public MediaData? MediaDataA { get; } = new MediaData { IsMainMedia = true };
 
-        public MediaData MediaDataB { get; } = new MediaData { IsMainMedia = false };
+        public MediaData? MediaDataB { get; } = new MediaData { IsMainMedia = false };
 
         #endregion
 

@@ -17,11 +17,11 @@ namespace MergeSynced.Tools
     {
         #region Fields
 
-        public Process FfmpegProcess;
-        public Process FfprobeProcess;
+        public Process? FfmpegProcess;
+        public Process? FfprobeProcess;
         public bool FfmpegWasAborted;
 
-        public Process MkvmergeProcess;
+        public Process MkvmergeProcess = null!;
         public bool MkvmergeWasAborted;
 
         #endregion
@@ -118,7 +118,7 @@ namespace MergeSynced.Tools
             FfprobeProcess.BeginErrorReadLine();
         }
 
-        public bool ParseFfprobeJson(MediaData md)
+        public bool ParseFfprobeJson(MediaData? md)
         {
             if (md == null) return false;
             md.Clear();
@@ -127,19 +127,19 @@ namespace MergeSynced.Tools
             {
                 JObject json = JObject.Parse(_probeJson.ToString());
 
-                if (json["format"] == null || json["streams"] == null || json["format"]["duration"] == null) return false;
+                if (json["format"] == null || json["streams"] == null || json["format"]?["duration"] == null) return false;
 
                 // Get length of file
-                md.Duration = TimeSpan.FromSeconds(Convert.ToDouble(json["format"]["duration"].ToString(), new CultureInfo("en-us")));
+                md.Duration = TimeSpan.FromSeconds(Convert.ToDouble(json["format"]?["duration"]?.ToString(), new CultureInfo("en-us")));
 
                 bool audioTrackSelected = false;
 
-                foreach (JToken stream in json["streams"])
+                foreach (JToken stream in json["streams"]!)
                 {
-                    string language = string.Empty;
+                    string? language = string.Empty;
                     if (stream["tags"] != null)
                     {
-                        if (stream["tags"]["language"] != null) language = stream["tags"]["language"].ToString();
+                        if (stream["tags"]?["language"] != null) language = stream["tags"]?["language"]?.ToString();
                     }
                     else
                     {
@@ -263,7 +263,7 @@ namespace MergeSynced.Tools
             {
                 MkvmergeProcess.Close();
                 MkvmergeProcess.Dispose();
-                MkvmergeProcess = null;
+                MkvmergeProcess = null!;
             }
 
             MkvmergeWasAborted = true;
@@ -301,7 +301,7 @@ namespace MergeSynced.Tools
                 {
                     MkvmergeProcess.Close();
                     MkvmergeProcess.Dispose();
-                    MkvmergeProcess = null;
+                    MkvmergeProcess = null!;
                 }
             }
 
@@ -331,7 +331,7 @@ namespace MergeSynced.Tools
             MkvmergeProcess.BeginErrorReadLine();
         }
 
-        public bool ParseMkvmergeJson(MediaData md)
+        public bool ParseMkvmergeJson(MediaData? md)
         {
             if (md == null) return false;
             md.Clear();
@@ -343,24 +343,24 @@ namespace MergeSynced.Tools
                 if (json["tracks"] == null) return false;
 
                 // Get length of file
-                string duration = string.Empty;
+                string? duration = string.Empty;
                 if (json["container"]?["properties"]?["duration"] != null)
-                    duration = json["container"]["properties"]["duration"].ToString();
+                    duration = json["container"]?["properties"]?["duration"]?.ToString();
                 // ReSharper disable once PossibleLossOfFraction
-                if (duration != string.Empty) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
+                if (duration != string.Empty) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration?.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
 
                 bool audioTrackSelected = false;
 
-                foreach (JToken stream in json["tracks"])
+                foreach (JToken stream in json["tracks"]!)
                 {
                     CheckBoxMedia cb = new CheckBoxMedia
                     {
                         IsSelected = md.IsMainMedia
                     };
-                    string codecName = stream["codec"]?.ToString();
+                    string? codecName = stream["codec"]?.ToString();
                     if (stream["properties"] != null)
                     {
-                        if (stream["properties"]["language"] != null) cb.LanguageId = stream["properties"]["language"].ToString();
+                        if (stream["properties"]?["language"] != null) cb.LanguageId = stream["properties"]?["language"]?.ToString();
                     }
                     else
                     {
@@ -403,9 +403,9 @@ namespace MergeSynced.Tools
                 {
                     if (json["chapters"] != null)
                     {
-                        foreach (JToken stream in json["chapters"])
+                        foreach (JToken stream in json["chapters"]!)
                         {
-                            if (stream["num_entries"] == null || stream["num_entries"].ToObject<int>() <= 0) continue;
+                            if (stream["num_entries"] == null || stream["num_entries"]!.ToObject<int>() <= 0) continue;
                             CheckBoxMedia cb = new CheckBoxMedia
                             {
                                 IsSelected = md.IsMainMedia,
@@ -421,7 +421,7 @@ namespace MergeSynced.Tools
 
                     if (json["attachments"] != null)
                     {
-                        foreach (JToken stream in json["attachments"])
+                        foreach (JToken stream in json["attachments"]!)
                         {
                             if (stream["file_name"] == null || stream["id"] == null) continue;
                             CheckBoxMedia cb = new CheckBoxMedia

@@ -22,7 +22,7 @@ namespace MergeSynced.Tools
             }
 
             process.EnableRaisingEvents = true;
-            process.Exited += ProcessExited;
+            process.Exited += ProcessExited!;
 
             try
             {
@@ -38,7 +38,7 @@ namespace MergeSynced.Tools
             }
             finally
             {
-                process.Exited -= ProcessExited;
+                process.Exited -= ProcessExited!;
             }
         }
     }

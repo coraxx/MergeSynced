@@ -15,8 +15,13 @@ namespace MergeSynced
         /// <param name="b">Dataset B</param>
         /// <param name="c">Cross correlation</param>
         /// <returns></returns>
-        public static void CrossCorrelation(float[] a, float[] b, out float[] c)
+        public static void CrossCorrelation(float[]? a, float[]? b, out float[]? c)
         {
+            if (a == null || b == null)
+            {
+                c = null;
+                return;
+            }
             // Both arrays must be same size, if not, take smaller count
             int size = a.Length < b.Length ? a.Length : b.Length;
 
@@ -84,12 +89,12 @@ namespace MergeSynced
             }
         }
 
-        public static double CalculateDelay(float[] corrData, int sampleRate)
+        public static double CalculateDelay(float[]? corrData, int sampleRate)
         {
-            float max = corrData.Max();
-            int maxIndex = Array.IndexOf(corrData, max);
+            float max = corrData!.Max();
+            int maxIndex = Array.IndexOf(corrData!, max);
             double resFromLeft = (double)maxIndex / sampleRate;
-            double resFromRight = (double)(corrData.Length - maxIndex) / sampleRate;
+            double resFromRight = (double)(corrData!.Length - maxIndex) / sampleRate;
             Debug.WriteLine($"{resFromLeft}s _delay (from left)");
             Debug.WriteLine($"{resFromRight}s _delay (from right)");
 

@@ -10,8 +10,8 @@ namespace MergeSynced.Controls
         private SolidColorBrush _typeBrush = new SolidColorBrush(Colors.Gray);
         private bool _isSelected;
         private string _description = string.Empty;
-        private string _languageId = string.Empty;
-        private string _codecType = string.Empty;
+        private string? _languageId = string.Empty;
+        private string? _codecType = string.Empty;
         private int _index = -1;
 
         public SolidColorBrush TypeBrush
@@ -44,7 +44,7 @@ namespace MergeSynced.Controls
             }
         }
 
-        public string LanguageId
+        public string? LanguageId
         {
             get => _languageId;
             set
@@ -54,7 +54,7 @@ namespace MergeSynced.Controls
             }
         }
 
-        public string CodecType
+        public string? CodecType
         {
             get => _codecType;
             set
