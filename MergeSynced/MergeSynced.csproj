@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <PublishSingleFile>true</PublishSingleFile>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0</FileVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -67,4 +68,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <Target Name="PostClean" AfterTargets="Clean">
+      <RemoveDir Directories="$(BaseIntermediateOutputPath)" /><!-- obj -->
+      <RemoveDir Directories="$(BaseOutputPath)" /><!-- bin -->
+  </Target>
 </Project>
