@@ -182,7 +182,7 @@ namespace MergeSynced.Views
 
         private async void Probe_OnClick(object sender, RoutedEventArgs e)
         {
-            if (FilePathA.Text == string.Empty || FilePathB.Text == string.Empty)
+            if (string.IsNullOrEmpty(FilePathA.Text) || string.IsNullOrEmpty(FilePathB.Text))
             {
                 SwitchButtonState(ProbeButton, false, "Please select two media files", true);
                 return;
@@ -224,6 +224,11 @@ namespace MergeSynced.Views
                 // A
                 _ep.CallMkvmerge($"--identification-format json --identify \"{FilePathA.Text}\"",
                     _ep.ProbeOutputHandler, _workingDir);
+                if (_ep.MkvmergeProcess == null!)
+                {
+                    SwitchButtonState(ProbeButton, false, "Error starting mkvmerge", true);
+                    return;
+                }
                 await _ep.MkvmergeProcess.WaitForExitAsync();
 
                 MainViewModel.ProgressPercent = 25;
@@ -263,6 +268,11 @@ namespace MergeSynced.Views
             else
             {
                 _ep.CallFfprobe(FilePathA.Text, _workingDir);
+                if (_ep.FfprobeProcess == null!)
+                {
+                    SwitchButtonState(ProbeButton, false, "Error starting ffprobe", true);
+                    return;
+                }
                 await _ep.FfprobeProcess!.WaitForExitAsync();
 
                 MainViewModel.ProgressPercent = 25;
@@ -304,7 +314,7 @@ namespace MergeSynced.Views
         {
             SwitchButtonState(AnalyzeButton, true, "Analyzing...");
 
-            if (FilePathA.Text == string.Empty || FilePathB.Text == string.Empty)
+            if (string.IsNullOrEmpty(FilePathA.Text) || string.IsNullOrEmpty(FilePathB.Text))
             {
                 SwitchButtonState(AnalyzeButton, false, "Please select two media files", true);
                 return;
@@ -383,6 +393,12 @@ namespace MergeSynced.Views
                 args = $"-y -i \"{FilePathA.Text}\" -map 0:{(selectedTrack > 0 ? selectedTrack.ToString() : "a:0")} -c:a pcm_s16le -ac 1 \"{inputA}\"";
                 Debug.Print(args);
                 _ep.CallFfmpeg(args, FfmpegOutputHandler, _workingDir);
+            }
+            if (_ep.FfmpegProcess == null!)
+            {
+                ProbeButton.IsEnabled = true;
+                SwitchButtonState(AnalyzeButton, false, "Error starting ffmpeg", true);
+                return;
             }
             await _ep.FfmpegProcess!.WaitForExitAsync();
 
@@ -745,7 +761,7 @@ namespace MergeSynced.Views
                 args = $"{args} \"(\" \"{FilePathB.Text}\"  \")\"";
 
                 // Add title
-                args = $"{args} --title \"{(MainViewModel.MediaDataA.Title == string.Empty ? Path.GetFileNameWithoutExtension((string?)FilePathOut.Text) : MainViewModel.MediaDataA.Title)}\"";
+                args = $"{args} --title \"{(string.IsNullOrEmpty(MainViewModel.MediaDataA.Title) ? Path.GetFileNameWithoutExtension((string?)FilePathOut.Text) : MainViewModel.MediaDataA.Title)}\"";
 
                 // Add track order
                 args = $"{args} --track-order ";
@@ -869,7 +885,7 @@ namespace MergeSynced.Views
             string? fileName = Path.GetFileNameWithoutExtension((string?)FilePathA.Text);
             string? fileExt = Path.GetExtension((string?)FilePathA.Text);
             saveFileDialog.Directory = dirName ?? @"C:\temp";
-            saveFileDialog.InitialFileName = fileName != string.Empty && fileExt != string.Empty ? $"{fileName}_SyncedMerged{fileExt}" : "SyncedMerged.mp4";
+            saveFileDialog.InitialFileName = string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(fileExt) ? "SyncedMerged.mp4" : $"{fileName}_SyncedMerged{fileExt}";
             string? saveFileResult = await saveFileDialog.ShowAsync(this);
             if (saveFileResult == null) return;
             FilePathOut.Text = saveFileResult;
@@ -879,7 +895,7 @@ namespace MergeSynced.Views
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
 
-            string pathToCheck = FilePathA.Text != string.Empty ? FilePathA.Text : FilePathB.Text;
+            string pathToCheck = string.IsNullOrEmpty(FilePathA.Text) ? FilePathB.Text : FilePathA.Text;
             string? dirName = File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null;
             string fileName = Path.GetFileNameWithoutExtension(pathToCheck);
             openFileDialog.Directory = dirName ?? @"C:\";
@@ -893,7 +909,7 @@ namespace MergeSynced.Views
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
 
-            string pathToCheck = FilePathB.Text != string.Empty ? FilePathB.Text : FilePathA.Text;
+            string pathToCheck = string.IsNullOrEmpty(FilePathB.Text) ? FilePathA.Text : FilePathB.Text;
             string? dirName = File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null;
             string fileName = Path.GetFileNameWithoutExtension(pathToCheck);
             openFileDialog.Directory = dirName ?? @"C:\";

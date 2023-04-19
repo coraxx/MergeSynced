@@ -65,9 +65,19 @@ namespace MergeSynced.Tools
             FfmpegProcess.ErrorDataReceived += outputHandler;
 
             // Start process
-            FfmpegProcess.Start();
-            FfmpegProcess.BeginOutputReadLine();
-            FfmpegProcess.BeginErrorReadLine();
+            try
+            {
+                FfmpegProcess.Start();
+                FfmpegProcess.BeginOutputReadLine();
+                FfmpegProcess.BeginErrorReadLine();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                FfmpegProcess.Close();
+                FfmpegProcess.Dispose();
+                FfmpegProcess = null;
+            }
         }
 
         public void CallFfprobe(string filePath, string workingDir = @"C:\temp")
@@ -113,9 +123,19 @@ namespace MergeSynced.Tools
             FfprobeProcess.ErrorDataReceived += ProbeOutputHandler;
 
             // Start process
-            FfprobeProcess.Start();
-            FfprobeProcess.BeginOutputReadLine();
-            FfprobeProcess.BeginErrorReadLine();
+            try
+            {
+                FfprobeProcess.Start();
+                FfprobeProcess.BeginOutputReadLine();
+                FfprobeProcess.BeginErrorReadLine();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                FfprobeProcess.Close();
+                FfprobeProcess.Dispose();
+                FfprobeProcess = null;
+            }
         }
 
         public bool ParseFfprobeJson(MediaData? md)
@@ -199,7 +219,7 @@ namespace MergeSynced.Tools
 
         public bool AbortMerge()
         {
-            if (FfmpegProcess == null && MkvmergeProcess == null) return false;
+            if (FfmpegProcess == null && MkvmergeProcess == null!) return false;
 
             if (FfmpegProcess != null)
             {
@@ -235,7 +255,7 @@ namespace MergeSynced.Tools
                 FfmpegWasAborted = true;
             }
 
-            if (MkvmergeProcess == null) return true;
+            if (MkvmergeProcess == null!) return true;
 
             try
             {
@@ -273,7 +293,7 @@ namespace MergeSynced.Tools
 
         public void CallMkvmerge(string args, DataReceivedEventHandler outputHandler, string workingDir = @"C:\temp")
         {
-            if (MkvmergeProcess != null)
+            if (MkvmergeProcess != null!)
             {
                 try
                 {
@@ -326,9 +346,19 @@ namespace MergeSynced.Tools
             MkvmergeProcess.ErrorDataReceived += outputHandler;
 
             // Start process
-            MkvmergeProcess.Start();
-            MkvmergeProcess.BeginOutputReadLine();
-            MkvmergeProcess.BeginErrorReadLine();
+            try
+            {
+                MkvmergeProcess.Start();
+                MkvmergeProcess.BeginOutputReadLine();
+                MkvmergeProcess.BeginErrorReadLine();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                MkvmergeProcess.Close();
+                MkvmergeProcess.Dispose();
+                MkvmergeProcess = null!;
+            }
         }
 
         public bool ParseMkvmergeJson(MediaData? md)
@@ -347,7 +377,7 @@ namespace MergeSynced.Tools
                 if (json["container"]?["properties"]?["duration"] != null)
                     duration = json["container"]?["properties"]?["duration"]?.ToString();
                 // ReSharper disable once PossibleLossOfFraction
-                if (duration != string.Empty) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration?.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
+                if (!string.IsNullOrEmpty(duration)) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration?.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
 
                 bool audioTrackSelected = false;
 

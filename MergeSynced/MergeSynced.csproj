@@ -8,10 +8,10 @@
     <PublishSingleFile>true</PublishSingleFile>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\MergeSyncedLogoSimple.ico</ApplicationIcon>
-    <AssemblyVersion>2.0.1.0</AssemblyVersion>
-    <FileVersion>2.0.1</FileVersion>
-    <CFBundleVersion>2.0.1</CFBundleVersion>
-    <CFBundleShortVersionString>2.0.1</CFBundleShortVersionString>
+    <AssemblyVersion>2.0.2.0</AssemblyVersion>
+    <FileVersion>2.0.2</FileVersion>
+    <CFBundleVersion>2.0.2</CFBundleVersion>
+    <CFBundleShortVersionString>2.0.2</CFBundleShortVersionString>
     <CFBundleName>MergeSynced</CFBundleName>
     <CFBundleDisplayName>MergeSynced</CFBundleDisplayName>
     <CFBundleExecutable>MergeSynced</CFBundleExecutable>
