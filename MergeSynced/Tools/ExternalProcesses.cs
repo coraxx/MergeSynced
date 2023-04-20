@@ -24,6 +24,8 @@ namespace MergeSynced.Tools
         public Process MkvmergeProcess = null!;
         public bool MkvmergeWasAborted;
 
+        private const string DefaultTempPath = @"/tmp";
+
         #endregion
 
         #region Probing output handler
@@ -31,14 +33,14 @@ namespace MergeSynced.Tools
         private readonly StringBuilder _probeJson = new StringBuilder();
         public void ProbeOutputHandler(object sender, DataReceivedEventArgs e)
         {
-            _probeJson.AppendLine(e.Data);
+            lock (_probeJson) _probeJson.AppendLine(e.Data);
         }
 
         #endregion
 
         #region ffmpeg
 
-        public void CallFfmpeg(string args, DataReceivedEventHandler outputHandler, string workingDir = @"C:\temp")
+        public void CallFfmpeg(string args, DataReceivedEventHandler outputHandler, string workingDir = DefaultTempPath)
         {
             if (FfmpegProcess != null)
             {
@@ -73,14 +75,14 @@ namespace MergeSynced.Tools
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 FfmpegProcess.Close();
                 FfmpegProcess.Dispose();
                 FfmpegProcess = null;
             }
         }
 
-        public void CallFfprobe(string filePath, string workingDir = @"C:\temp")
+        public void CallFfprobe(string filePath, string workingDir = DefaultTempPath)
         {
             if (FfprobeProcess != null)
             {
@@ -95,7 +97,7 @@ namespace MergeSynced.Tools
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
                 finally
                 {
@@ -131,7 +133,7 @@ namespace MergeSynced.Tools
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 FfprobeProcess.Close();
                 FfprobeProcess.Dispose();
                 FfprobeProcess = null;
@@ -206,7 +208,7 @@ namespace MergeSynced.Tools
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 return false;
             }
 
@@ -228,7 +230,7 @@ namespace MergeSynced.Tools
                     Debug.WriteLine("Sending quit signal to ffmpeg process...");
                     // Get StdInput from ffmpeg process and send q to quit gracefully
                     StreamWriter streamWriter = FfmpegProcess.StandardInput;
-                    streamWriter.WriteLine("q");
+                    if (!FfmpegProcess.HasExited) streamWriter.WriteLine("q");
 
                     // Give process time to quit
                     FfmpegProcess.WaitForExit(5000);
@@ -243,7 +245,7 @@ namespace MergeSynced.Tools
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
                 finally
                 {
@@ -262,13 +264,13 @@ namespace MergeSynced.Tools
                 Debug.WriteLine("Sending quit signal to mkvmerge process...");
                 // Get StdInput from mkvmerge process and send ctrl+c
                 StreamWriter streamWriter = MkvmergeProcess.StandardInput;
-                streamWriter.WriteLine("\x3");
+                if (!MkvmergeProcess.HasExited) streamWriter.WriteLine("\x3");
 
                 // Give process time to quit
                 MkvmergeProcess.WaitForExit(5000);
                 Debug.WriteLine("Checking if mkvmerge quit gracefully");
 
-                if (!MkvmergeProcess.HasExited)
+                
                 {
                     Debug.WriteLine("Killing mkvmerge...");
                     MkvmergeProcess.Kill();
@@ -277,7 +279,7 @@ namespace MergeSynced.Tools
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                Trace.WriteLine(e.ToString());
             }
             finally
             {
@@ -291,7 +293,7 @@ namespace MergeSynced.Tools
             return true;
         }
 
-        public void CallMkvmerge(string args, DataReceivedEventHandler outputHandler, string workingDir = @"C:\temp")
+        public void CallMkvmerge(string args, DataReceivedEventHandler outputHandler, string workingDir = DefaultTempPath)
         {
             if (MkvmergeProcess != null!)
             {
@@ -300,7 +302,7 @@ namespace MergeSynced.Tools
                     Debug.WriteLine("Sending quit signal to mkvmerge process...");
                     // Get StdInput from mkvmerge process and send ctrl+c
                     StreamWriter streamWriter = MkvmergeProcess.StandardInput;
-                    streamWriter.WriteLine("\x3");
+                    if (!MkvmergeProcess.HasExited) streamWriter.WriteLine("\x3");
 
                     // Give process time to quit
                     MkvmergeProcess.WaitForExit(5000);
@@ -315,7 +317,7 @@ namespace MergeSynced.Tools
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
                 finally
                 {
@@ -354,7 +356,7 @@ namespace MergeSynced.Tools
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 MkvmergeProcess.Close();
                 MkvmergeProcess.Dispose();
                 MkvmergeProcess = null!;
@@ -377,7 +379,7 @@ namespace MergeSynced.Tools
                 if (json["container"]?["properties"]?["duration"] != null)
                     duration = json["container"]?["properties"]?["duration"]?.ToString();
                 // ReSharper disable once PossibleLossOfFraction
-                if (!string.IsNullOrEmpty(duration)) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration?.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
+                if (!string.IsNullOrEmpty(duration)) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
 
                 bool audioTrackSelected = false;
 
@@ -472,12 +474,12 @@ namespace MergeSynced.Tools
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 return false;
             }
 
