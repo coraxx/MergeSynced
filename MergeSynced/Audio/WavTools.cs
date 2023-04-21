@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace MergeSynced
+namespace MergeSynced.Audio
 {
-    public class Audio
+    public class WavTools
     {
         /// <summary>
         /// Read wave file. Code from https://stackoverflow.com/questions/8754111/how-to-read-the-data-in-a-wav-file-to-an-array/11162668#11162668
@@ -17,7 +17,7 @@ namespace MergeSynced
         /// <param name="l">Output of left channel</param>
         /// <param name="r">Output of right channel</param>
         /// <returns>Details of wav file</returns>
-        public WavHeader ReadWav(string filename, out float[] l, out float[] r)
+        public WavHeader? ReadWav(string filename, out float[]? l, out float[]? r)
         {
             l = r = null;
 
@@ -26,7 +26,7 @@ namespace MergeSynced
                 using (FileStream fs = File.Open(filename, FileMode.Open))
                 {
                     BinaryReader reader = new BinaryReader(fs);
-                    WavHeader header = new WavHeader();
+                    WavHeader? header = new WavHeader();
 
                     // chunk 0
                     // reading int 32 as 4 bytes/chars for debugging header
@@ -62,7 +62,7 @@ namespace MergeSynced
                     }
 
                     // chunk 2 can have more header data before data
-                    byte[] byteArray = null;
+                    byte[]? byteArray = null;
                     int bytes = 0;
                     while (reader.BaseStream.Position != reader.BaseStream.Length)
                     {
@@ -86,7 +86,7 @@ namespace MergeSynced
                     int nValues = bytes / bytesForSamples + 1;
 
 
-                    float[] asFloat;
+                    float[]? asFloat;
                     switch (header.BitDepth)
                     {
                         case 64:
@@ -161,7 +161,7 @@ namespace MergeSynced
         /// <param name="filename">Path to file name</param>
         /// <param name="m">Output of left channel</param>
         /// <returns>Details of wav file</returns>
-        public WavHeader ReadWav(string filename, out float[] m)
+        public WavHeader? ReadWav(string filename, out float[]? m)
         {
             m = null;
 
@@ -170,7 +170,7 @@ namespace MergeSynced
                 using (FileStream fs = File.Open(filename, FileMode.Open))
                 {
                     BinaryReader reader = new BinaryReader(fs);
-                    WavHeader header = new WavHeader();
+                    WavHeader? header = new WavHeader();
 
                     // chunk 0
                     // reading int 32 as 4 bytes/chars for debugging header
@@ -206,7 +206,7 @@ namespace MergeSynced
                     }
 
                     // chunk 2 can have more header data before data
-                    byte[] byteArray = null;
+                    byte[]? byteArray = null;
                     int bytes = 0;
                     while (reader.BaseStream.Position != reader.BaseStream.Length)
                     {
@@ -290,14 +290,5 @@ namespace MergeSynced
                 return null;
             }
         }
-    }
-
-    public class WavHeader
-    {
-        public int FileSize;
-        public int RiffType;
-        public int Channels;
-        public int BitDepth;
-        public int SampleRate;
     }
 }

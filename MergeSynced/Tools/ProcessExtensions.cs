@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MergeSynced
+namespace MergeSynced.Tools
 {
 
     /// <summary>
@@ -22,7 +22,7 @@ namespace MergeSynced
             }
 
             process.EnableRaisingEvents = true;
-            process.Exited += ProcessExited;
+            process.Exited += ProcessExited!;
 
             try
             {
@@ -38,7 +38,7 @@ namespace MergeSynced
             }
             finally
             {
-                process.Exited -= ProcessExited;
+                process.Exited -= ProcessExited!;
             }
         }
     }

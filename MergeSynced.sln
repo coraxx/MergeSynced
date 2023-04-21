@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31829.152
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MergeSynced", "MergeSynced\MergeSynced.csproj", "{AF9CD880-7333-424F-ABF8-1CBD5C650126}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MergeSync", "MergeSynced\MergeSynced.csproj", "{C40C709A-CA51-4A72-891B-54C1EA72758C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AF9CD880-7333-424F-ABF8-1CBD5C650126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF9CD880-7333-424F-ABF8-1CBD5C650126}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AF9CD880-7333-424F-ABF8-1CBD5C650126}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AF9CD880-7333-424F-ABF8-1CBD5C650126}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C40C709A-CA51-4A72-891B-54C1EA72758C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C40C709A-CA51-4A72-891B-54C1EA72758C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C40C709A-CA51-4A72-891B-54C1EA72758C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C40C709A-CA51-4A72-891B-54C1EA72758C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {CB1B5859-70CE-48EE-AEA5-82D578EC85B1}
+		SolutionGuid = {807108E2-97A8-4CFD-AC60-0BF8F9B9528F}
 	EndGlobalSection
 EndGlobal

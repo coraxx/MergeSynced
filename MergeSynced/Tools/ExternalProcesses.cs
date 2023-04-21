@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Windows.Controls;
-using System.Windows.Media;
+using Avalonia.Controls;
+using Avalonia.Media;
+using MergeSynced.Controls;
 using Newtonsoft.Json.Linq;
 
-namespace MergeSynced
+namespace MergeSynced.Tools
 {
     /// <summary>
     /// Calling external tools ffmpeg and mkvtoolnix to probe and merge input files.
@@ -16,12 +17,14 @@ namespace MergeSynced
     {
         #region Fields
 
-        public Process FfmpegProcess;
-        public Process FfprobeProcess;
+        public Process? FfmpegProcess;
+        public Process? FfprobeProcess;
         public bool FfmpegWasAborted;
 
-        public Process MkvmergeProcess;
+        public Process MkvmergeProcess = null!;
         public bool MkvmergeWasAborted;
+
+        private const string DefaultTempPath = @"/tmp";
 
         #endregion
 
@@ -30,14 +33,14 @@ namespace MergeSynced
         private readonly StringBuilder _probeJson = new StringBuilder();
         public void ProbeOutputHandler(object sender, DataReceivedEventArgs e)
         {
-            _probeJson.AppendLine(e.Data);
+            lock (_probeJson) _probeJson.AppendLine(e.Data);
         }
 
         #endregion
 
         #region ffmpeg
 
-        public void CallFfmpeg(string args, DataReceivedEventHandler outputHandler, string workingDir=@"C:\temp")
+        public void CallFfmpeg(string args, DataReceivedEventHandler outputHandler, string workingDir = DefaultTempPath)
         {
             if (FfmpegProcess != null)
             {
@@ -64,12 +67,22 @@ namespace MergeSynced
             FfmpegProcess.ErrorDataReceived += outputHandler;
 
             // Start process
-            FfmpegProcess.Start();
-            FfmpegProcess.BeginOutputReadLine();
-            FfmpegProcess.BeginErrorReadLine();
+            try
+            {
+                FfmpegProcess.Start();
+                FfmpegProcess.BeginOutputReadLine();
+                FfmpegProcess.BeginErrorReadLine();
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.ToString());
+                FfmpegProcess.Close();
+                FfmpegProcess.Dispose();
+                FfmpegProcess = null;
+            }
         }
 
-        public void CallFfprobe(string filePath, string workingDir = @"C:\temp")
+        public void CallFfprobe(string filePath, string workingDir = DefaultTempPath)
         {
             if (FfprobeProcess != null)
             {
@@ -84,7 +97,7 @@ namespace MergeSynced
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
                 finally
                 {
@@ -112,12 +125,22 @@ namespace MergeSynced
             FfprobeProcess.ErrorDataReceived += ProbeOutputHandler;
 
             // Start process
-            FfprobeProcess.Start();
-            FfprobeProcess.BeginOutputReadLine();
-            FfprobeProcess.BeginErrorReadLine();
+            try
+            {
+                FfprobeProcess.Start();
+                FfprobeProcess.BeginOutputReadLine();
+                FfprobeProcess.BeginErrorReadLine();
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.ToString());
+                FfprobeProcess.Close();
+                FfprobeProcess.Dispose();
+                FfprobeProcess = null;
+            }
         }
 
-        public bool ParseFfprobeJson(MediaData md)
+        public bool ParseFfprobeJson(MediaData? md)
         {
             if (md == null) return false;
             md.Clear();
@@ -126,19 +149,19 @@ namespace MergeSynced
             {
                 JObject json = JObject.Parse(_probeJson.ToString());
 
-                if (json["format"] == null || json["streams"] == null || json["format"]["duration"] == null) return false;
+                if (json["format"] == null || json["streams"] == null || json["format"]?["duration"] == null) return false;
 
                 // Get length of file
-                md.Duration = TimeSpan.FromSeconds(Convert.ToDouble(json["format"]["duration"].ToString(), new CultureInfo("en-us")));
+                md.Duration = TimeSpan.FromSeconds(Convert.ToDouble(json["format"]?["duration"]?.ToString(), new CultureInfo("en-us")));
 
                 bool audioTrackSelected = false;
 
-                foreach (JToken stream in json["streams"])
+                foreach (JToken stream in json["streams"]!)
                 {
-                    string language = string.Empty;
+                    string? language = string.Empty;
                     if (stream["tags"] != null)
                     {
-                        if (stream["tags"]["language"] != null) language = stream["tags"]["language"].ToString();
+                        if (stream["tags"]?["language"] != null) language = stream["tags"]?["language"]?.ToString();
                     }
                     else
                     {
@@ -156,14 +179,14 @@ namespace MergeSynced
 
                     cb.LanguageId = language;
                     cb.CodecType = stream["codec_type"]?.ToString();
-                    cb.Content = streamInfo;
-                    cb.IsChecked = md.IsMainMedia;
+                    cb.Description = streamInfo;
+                    cb.IsSelected = md.IsMainMedia;
 
                     // Color code
                     switch (cb.CodecType)
                     {
                         case "audio":
-                            cb.Background = new SolidColorBrush(Colors.LimeGreen);
+                            cb.TypeBrush = new SolidColorBrush(Colors.LimeGreen);
                             ComboBoxItem co = new ComboBoxItem
                             {
                                 Content = cb.Index.ToString(),
@@ -173,10 +196,10 @@ namespace MergeSynced
                             audioTrackSelected = true;
                             break;
                         case "subtitle":
-                            cb.Background = new SolidColorBrush(Colors.Yellow);
+                            cb.TypeBrush = new SolidColorBrush(Colors.Yellow);
                             break;
                         case "video":
-                            cb.Background = new SolidColorBrush(Colors.DodgerBlue);
+                            cb.TypeBrush = new SolidColorBrush(Colors.DodgerBlue);
                             break;
                     }
 
@@ -185,7 +208,7 @@ namespace MergeSynced
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 return false;
             }
 
@@ -198,7 +221,7 @@ namespace MergeSynced
 
         public bool AbortMerge()
         {
-            if (FfmpegProcess == null && MkvmergeProcess == null) return false;
+            if (FfmpegProcess == null && MkvmergeProcess == null!) return false;
 
             if (FfmpegProcess != null)
             {
@@ -207,7 +230,7 @@ namespace MergeSynced
                     Debug.WriteLine("Sending quit signal to ffmpeg process...");
                     // Get StdInput from ffmpeg process and send q to quit gracefully
                     StreamWriter streamWriter = FfmpegProcess.StandardInput;
-                    streamWriter.WriteLine("q");
+                    if (!FfmpegProcess.HasExited) streamWriter.WriteLine("q");
 
                     // Give process time to quit
                     FfmpegProcess.WaitForExit(5000);
@@ -222,7 +245,7 @@ namespace MergeSynced
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
                 finally
                 {
@@ -234,20 +257,20 @@ namespace MergeSynced
                 FfmpegWasAborted = true;
             }
 
-            if (MkvmergeProcess == null) return true;
+            if (MkvmergeProcess == null!) return true;
 
             try
             {
                 Debug.WriteLine("Sending quit signal to mkvmerge process...");
                 // Get StdInput from mkvmerge process and send ctrl+c
                 StreamWriter streamWriter = MkvmergeProcess.StandardInput;
-                streamWriter.WriteLine("\x3");
+                if (!MkvmergeProcess.HasExited) streamWriter.WriteLine("\x3");
 
                 // Give process time to quit
                 MkvmergeProcess.WaitForExit(5000);
                 Debug.WriteLine("Checking if mkvmerge quit gracefully");
 
-                if (!MkvmergeProcess.HasExited)
+                
                 {
                     Debug.WriteLine("Killing mkvmerge...");
                     MkvmergeProcess.Kill();
@@ -256,30 +279,30 @@ namespace MergeSynced
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                Trace.WriteLine(e.ToString());
             }
             finally
             {
                 MkvmergeProcess.Close();
                 MkvmergeProcess.Dispose();
-                MkvmergeProcess = null;
+                MkvmergeProcess = null!;
             }
 
             MkvmergeWasAborted = true;
-            
+
             return true;
         }
 
-        public void CallMkvmerge(string args, DataReceivedEventHandler outputHandler, string workingDir = @"C:\temp")
+        public void CallMkvmerge(string args, DataReceivedEventHandler outputHandler, string workingDir = DefaultTempPath)
         {
-            if (MkvmergeProcess != null)
+            if (MkvmergeProcess != null!)
             {
                 try
                 {
                     Debug.WriteLine("Sending quit signal to mkvmerge process...");
                     // Get StdInput from mkvmerge process and send ctrl+c
                     StreamWriter streamWriter = MkvmergeProcess.StandardInput;
-                    streamWriter.WriteLine("\x3");
+                    if (!MkvmergeProcess.HasExited) streamWriter.WriteLine("\x3");
 
                     // Give process time to quit
                     MkvmergeProcess.WaitForExit(5000);
@@ -294,13 +317,13 @@ namespace MergeSynced
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
                 finally
                 {
                     MkvmergeProcess.Close();
                     MkvmergeProcess.Dispose();
-                    MkvmergeProcess = null;
+                    MkvmergeProcess = null!;
                 }
             }
 
@@ -325,12 +348,22 @@ namespace MergeSynced
             MkvmergeProcess.ErrorDataReceived += outputHandler;
 
             // Start process
-            MkvmergeProcess.Start();
-            MkvmergeProcess.BeginOutputReadLine();
-            MkvmergeProcess.BeginErrorReadLine();
+            try
+            {
+                MkvmergeProcess.Start();
+                MkvmergeProcess.BeginOutputReadLine();
+                MkvmergeProcess.BeginErrorReadLine();
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine(e.ToString());
+                MkvmergeProcess.Close();
+                MkvmergeProcess.Dispose();
+                MkvmergeProcess = null!;
+            }
         }
 
-        public bool ParseMkvmergeJson(MediaData md)
+        public bool ParseMkvmergeJson(MediaData? md)
         {
             if (md == null) return false;
             md.Clear();
@@ -342,24 +375,24 @@ namespace MergeSynced
                 if (json["tracks"] == null) return false;
 
                 // Get length of file
-                string duration = string.Empty;
+                string? duration = string.Empty;
                 if (json["container"]?["properties"]?["duration"] != null)
-                    duration = json["container"]["properties"]["duration"].ToString();
+                    duration = json["container"]?["properties"]?["duration"]?.ToString();
                 // ReSharper disable once PossibleLossOfFraction
-                if (duration != string.Empty) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
+                if (!string.IsNullOrEmpty(duration)) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
 
                 bool audioTrackSelected = false;
 
-                foreach (JToken stream in json["tracks"])
+                foreach (JToken stream in json["tracks"]!)
                 {
                     CheckBoxMedia cb = new CheckBoxMedia
                     {
-                        IsChecked = md.IsMainMedia
+                        IsSelected = md.IsMainMedia
                     };
-                    string codecName = stream["codec"]?.ToString();
+                    string? codecName = stream["codec"]?.ToString();
                     if (stream["properties"] != null)
                     {
-                        if (stream["properties"]["language"] != null) cb.LanguageId = stream["properties"]["language"].ToString();
+                        if (stream["properties"]?["language"] != null) cb.LanguageId = stream["properties"]?["language"]?.ToString();
                     }
                     else
                     {
@@ -372,14 +405,14 @@ namespace MergeSynced
                     cb.CodecType = stream["type"]?.ToString();
 
                     string streamInfo = $"idx: {cb.Index}; type: {cb.CodecType}; codec: {codecName}; language: {cb.LanguageId};";
-                    cb.Content = streamInfo;
+                    cb.Description = streamInfo;
                     Debug.WriteLine(streamInfo);
 
                     // Color code
                     switch (cb.CodecType)
                     {
                         case "audio":
-                            cb.Background = new SolidColorBrush(Colors.LimeGreen);
+                            cb.TypeBrush = new SolidColorBrush(Colors.LimeGreen);
                             ComboBoxItem co = new ComboBoxItem
                             {
                                 Content = cb.Index.ToString(),
@@ -389,10 +422,10 @@ namespace MergeSynced
                             audioTrackSelected = true;
                             break;
                         case "subtitles":
-                            cb.Background = new SolidColorBrush(Colors.Yellow);
+                            cb.TypeBrush = new SolidColorBrush(Colors.Yellow);
                             break;
                         case "video":
-                            cb.Background = new SolidColorBrush(Colors.DodgerBlue);
+                            cb.TypeBrush = new SolidColorBrush(Colors.DodgerBlue);
                             break;
                     }
 
@@ -402,33 +435,33 @@ namespace MergeSynced
                 {
                     if (json["chapters"] != null)
                     {
-                        foreach (JToken stream in json["chapters"])
+                        foreach (JToken stream in json["chapters"]!)
                         {
-                            if (stream["num_entries"] == null || stream["num_entries"].ToObject<int>() <= 0) continue;
+                            if (stream["num_entries"] == null || stream["num_entries"]!.ToObject<int>() <= 0) continue;
                             CheckBoxMedia cb = new CheckBoxMedia
                             {
-                                IsChecked = md.IsMainMedia,
+                                IsSelected = md.IsMainMedia,
                                 CodecType = "chapters",
                                 Index = 0,
-                                Content = $"idx: n/a; type: chapters; entries: {stream["num_entries"]}",
-                                Background = new SolidColorBrush(Colors.Silver)
+                                Description = $"idx: n/a; type: chapters; entries: {stream["num_entries"]}",
+                                TypeBrush = new SolidColorBrush(Colors.Silver)
                             };
                             md.ListBoxItems.Add(cb);
                         }
-                        
+
                     }
 
                     if (json["attachments"] != null)
                     {
-                        foreach (JToken stream in json["attachments"])
+                        foreach (JToken stream in json["attachments"]!)
                         {
                             if (stream["file_name"] == null || stream["id"] == null) continue;
                             CheckBoxMedia cb = new CheckBoxMedia
                             {
-                                IsChecked = md.IsMainMedia,
+                                IsSelected = md.IsMainMedia,
                                 CodecType = "attachments",
-                                Content = $"idx: {stream["id"]}; type: attachments; file name: {stream["file_name"]}",
-                                Background = new SolidColorBrush(Colors.DeepPink)
+                                Description = $"idx: {stream["id"]}; type: attachments; file name: {stream["file_name"]}",
+                                TypeBrush = new SolidColorBrush(Colors.DeepPink)
                             };
                             if (int.TryParse(stream["id"]?.ToString(), out int index))
                             {
@@ -441,12 +474,12 @@ namespace MergeSynced
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e);
+                    Trace.WriteLine(e.ToString());
                 }
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
+                Trace.WriteLine(e.ToString());
                 return false;
             }
 
