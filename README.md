@@ -29,7 +29,15 @@ The offset between two audio streams is calculated by cross correlating a part o
 * * *
 ## Requirements ##
 At least ffmpeg needs to be installed. Depending on the container format used, mkvtoolnix needs to be installed as well.
-The executables must be made available through the PATH environment, otherwise this application will not be able to find them.
+The executables must be made available through the PATH environment variable, otherwise this application will not be able to find them.
+
+Depending on the used platform there are multiple ways to install ffmpeg and mkvtoolnix.
+It could look something like:
+```
+Linux # sudo apt-get install mkvtoolnix
+Mac   # brew install ffmpeg mkvtoolnix
+Win   # choco install ffmpeg mkvtoolnix
+```
 <br />
 <br />
 
