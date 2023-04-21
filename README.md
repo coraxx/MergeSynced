@@ -16,13 +16,13 @@
 
 Initially build for synchronizing a multi camera and microphone setup, this tool was extended to merge streams with the determined offset.
 
-<img src="https://semper.space/MergeSynced/Screenshot_01.png"  width="600">
+<img src="https://semper.space/MergeSynced/Screenshot_v2_01.png"  width="600">
 <br />
 <br />
 
 The offset between two audio streams is calculated by cross correlating a part of the selected audio streams. The result can be used wherever needed, or a new file can be generated with the selected audio/video streams.
 
-<img src="https://semper.space/MergeSynced/Screenshot_02.png"  width="600">
+<img src="https://semper.space/MergeSynced/Screenshot_v2_02.png"  width="600">
 <br />
 <br />
 
