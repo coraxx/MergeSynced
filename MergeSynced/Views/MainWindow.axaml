@@ -30,7 +30,7 @@
         </Style>
 
 		<Style Selector="TextBox">
-			<Setter Property="Padding" Value="0" />
+			<Setter Property="Padding" Value="5 2 0 0" />
 			<Setter Property="Margin" Value="0" />
 			<Setter Property="MinHeight" Value="5" />
 			<Setter Property="FontSize" Value="10" />
@@ -52,6 +52,11 @@
         <Style Selector="ComboBox /template/ ContentControl#ContentPresenter > TextBlock">
 			<Setter Property="Margin" Value="10,0,0,0" />
         </Style>
+        <Style Selector="ComboBoxItem">
+			<Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
+            <Setter Property="MinHeight" Value="5" />
+            <Setter Property="Height" Value="20" />
+        </Style>
 
         <Style Selector="Button">
 			<Setter Property="FontSize" Value="12" />
@@ -60,6 +65,10 @@
 			<Setter Property="VerticalContentAlignment" Value="Center" />
 			<Setter Property="VerticalAlignment" Value="Center" />
 			<Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="ListBoxItem">
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
         </Style>
     </Window.Styles>
 
@@ -85,10 +94,12 @@
 		</Grid>
 
 		<!-- Input file data -->
-		<ListBox x:Name="SelectionA" Grid.Row="1" Grid.Column="0" Items="{Binding MediaDataA.ListBoxItems}" SelectionMode="Single">
+		<ListBox x:Name="SelectionA" Grid.Row="1" Grid.Column="0" Items="{Binding MediaDataA.ListBoxItems}" SelectionMode="Single"
+                 Margin="2 0 0 0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Padding="4" BorderBrush="DarkGray" BorderThickness="1" Margin="1" Height="30" Background="{Binding TypeBrush}">
+                    <Border Padding="4" BorderBrush="DarkGray" BorderThickness="1" Margin="1" Height="30" Background="{Binding TypeBrush}"
+                            CornerRadius="{StaticResource ControlCornerRadius}">
                         <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Description}" FontSize="12"/>
                     </Border>
                 </DataTemplate>
@@ -100,10 +111,12 @@
                 </Style>
             </ListBox.Styles>
         </ListBox>
-        <ListBox x:Name="SelectionB" Grid.Row="1" Grid.Column="1" Items="{Binding MediaDataB.ListBoxItems}" SelectionMode="Single">
+        <ListBox x:Name="SelectionB" Grid.Row="1" Grid.Column="1" Items="{Binding MediaDataB.ListBoxItems}" SelectionMode="Single"
+                 Margin="0 0 2 0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Padding="4" BorderBrush="DarkGray" BorderThickness="1" Margin="1" Height="30" Background="{Binding TypeBrush}">
+                    <Border Padding="4" BorderBrush="DarkGray" BorderThickness="1" Margin="1" Height="30" Background="{Binding TypeBrush}"
+                            CornerRadius="{StaticResource ControlCornerRadius}">
                         <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Description}" FontSize="12"/>
                     </Border>
                 </DataTemplate>
@@ -152,7 +165,7 @@
 
 		<!-- Console output -->
 		<TextBox x:Name="ExternalProcessOutputTextBox" TextWrapping="WrapWithOverflow" IsReadOnly="True"
-	                 Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
+	                 Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" BorderThickness="1" Margin="2" CornerRadius="0">
 		</TextBox>
 
 		<!-- Results and plots -->
@@ -309,14 +322,14 @@
 			<Label x:Name="StatusLabel" Grid.Column="2" FontSize="18" Margin="10,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="Red"/>
 
 			<!-- Indicators if required tools were found, i.e. ffmpeg/mkvtoolnix -->
-			<Grid Grid.Column="3" RowDefinitions="13,12,13">
-				<Label x:Name="FfmpegAvailableState" Grid.Row="0" Content="ffmpeg" FontSize="8" VerticalAlignment="Center"
+			<StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+				<Label x:Name="FfmpegAvailableState" Content="ffmpeg" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
-				<Label x:Name="FfprobeAvailableState" Grid.Row="1" Content="ffprobe" FontSize="8" VerticalAlignment="Center"
+				<Label x:Name="FfprobeAvailableState" Content="ffprobe" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
 				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
-				<Label x:Name="MkvmergeAvailableState" Grid.Row="2" Content="mkvmerge" FontSize="8" VerticalAlignment="Center"
-				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
-			</Grid>
+				<Label x:Name="MkvmergeAvailableState" Content="mkvmerge" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
+                       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+			</StackPanel>
 		</Grid>
 	</Grid>
 </Window>
