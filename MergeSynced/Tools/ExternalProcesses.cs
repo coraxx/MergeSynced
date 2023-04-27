@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -189,8 +190,7 @@ namespace MergeSynced.Tools
                             cb.TypeBrush = new SolidColorBrush(Colors.LimeGreen);
                             ComboBoxItem co = new ComboBoxItem
                             {
-                                Content = cb.Index.ToString(),
-                                IsSelected = !audioTrackSelected
+                                Content = cb.Index.ToString()
                             };
                             md.ComboBoxItems.Add(co);
                             audioTrackSelected = true;
@@ -205,6 +205,8 @@ namespace MergeSynced.Tools
 
                     md.ListBoxItems.Add(cb);
                 }
+
+                if (audioTrackSelected) md.ListBoxItems.First().IsSelected = true;
             }
             catch (Exception e)
             {
@@ -415,8 +417,7 @@ namespace MergeSynced.Tools
                             cb.TypeBrush = new SolidColorBrush(Colors.LimeGreen);
                             ComboBoxItem co = new ComboBoxItem
                             {
-                                Content = cb.Index.ToString(),
-                                IsSelected = !audioTrackSelected
+                                Content = cb.Index.ToString()
                             };
                             md.ComboBoxItems.Add(co);
                             audioTrackSelected = true;
@@ -431,6 +432,9 @@ namespace MergeSynced.Tools
 
                     md.ListBoxItems.Add(cb);
                 }
+
+                if (audioTrackSelected) md.ListBoxItems.First().IsSelected = true;
+
                 try
                 {
                     if (json["chapters"] != null)
