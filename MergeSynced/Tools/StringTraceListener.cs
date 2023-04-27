@@ -47,7 +47,7 @@ public class StringTraceListener : TraceListener, INotifyPropertyChanged
             if (_builder.Length > 100000) _builder.Clear(); // Some simple cleanup
             _lastEntry = $"[{DateTime.Now.ToString(CultureInfo.CurrentCulture)}] {message}";
             _builder.AppendLine(_lastEntry);
-            Logfile?.WriteLine(_lastEntry);
+            if (Logfile != null && Logfile.BaseStream.CanWrite) Logfile?.WriteLine(_lastEntry);
             OnPropertyChanged(new PropertyChangedEventArgs("Trace"));
         }
     }
