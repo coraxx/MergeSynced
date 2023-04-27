@@ -1,7 +1,6 @@
 ﻿using Avalonia.Media;
 using MergeSynced.Controls;
 using System;
-using System.Dynamic;
 using Avalonia.Controls;
 
 namespace MergeSynced.ViewModels

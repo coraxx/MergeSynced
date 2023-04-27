@@ -8,7 +8,8 @@
         x:Class="MergeSynced.Views.MainWindow"
         x:DataType="vm:MergeSyncedViewModel"
         Icon="/Assets/MergeSyncedLogoSimple.ico"
-		Closing="MainWindow_OnClosing"
+		Closing="Window_OnClosing"
+		Loaded="Window_OnLoaded"
         Height="720" Width="900" MinHeight="600" MinWidth="600">
 
     <Design.DataContext>
@@ -30,11 +31,12 @@
         </Style>
 
 		<Style Selector="TextBox">
-			<Setter Property="Padding" Value="5 2 0 0" />
+			<Setter Property="Padding" Value="10 0 " />
 			<Setter Property="Margin" Value="0" />
 			<Setter Property="MinHeight" Value="5" />
 			<Setter Property="FontSize" Value="10" />
-		</Style>
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
 
 		<Style Selector="Label">
 			<Setter Property="Padding" Value="0" />
@@ -56,6 +58,8 @@
 			<Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
             <Setter Property="MinHeight" Value="5" />
             <Setter Property="Height" Value="20" />
+            <Setter Property="Padding" Value="10 0 0 0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
         <Style Selector="Button">
@@ -79,22 +83,22 @@
 
 			<Grid Grid.Column="0" ColumnDefinitions="65,*">
 				<Button Grid.Column="0" Margin="5 0 0 0" Content="Input A:" Click="SelectInputButtonA_OnClick" Padding="0" Width="60"/>
-				<TextBox x:Name="FilePathA" Grid.Column="1" DragDrop.AllowDrop="True" Height="26" FontSize="16"
+				<TextBox x:Name="FilePathA" Grid.Column="1" DragDrop.AllowDrop="True" Height="26" FontSize="12"
 			             Margin="5 0 10 0" BorderBrush="#454545"/>
 			</Grid>
 
-			<Button x:Name="SwitchPathsButton" Grid.Column="1" Margin="0, 0, 0,0" Content="&lt;-&gt;" Click="SwitchInputs_OnClick" Padding="5"
-                    VerticalAlignment="Center"/>
+			<Button x:Name="SwitchPathsButton" Grid.Column="1" Margin="0, 0, 0,0" Width="26" Content="&#x21CB;" Click="SwitchInputs_OnClick" Padding="0"
+                    VerticalAlignment="Center" VerticalContentAlignment="Center" FontSize="14"/>
 
 			<Grid Grid.Column="2" ColumnDefinitions="65,*">
 				<Button Grid.Column="0" Margin="10 0 0 0" Content="Input B:" Click="SelectInputButtonB_OnClick" Padding="0" Width="60"/>
-				<TextBox x:Name="FilePathB" Grid.Column="1" DragDrop.AllowDrop="True" Height="26" FontSize="16"
+				<TextBox x:Name="FilePathB" Grid.Column="1" DragDrop.AllowDrop="True" Height="26" FontSize="12"
 			             Margin="5 0 10 0" BorderBrush="#454545"/>
 			</Grid>
 		</Grid>
 
 		<!-- Input file data -->
-		<ListBox x:Name="SelectionA" Grid.Row="1" Grid.Column="0" Items="{Binding MediaDataA.ListBoxItems}" SelectionMode="Single"
+		<ListBox x:Name="SelectionA" Grid.Row="1" Grid.Column="0" ItemsSource="{Binding MediaDataA.ListBoxItems}" SelectionMode="Single"
                  Margin="2 0 0 0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -111,7 +115,7 @@
                 </Style>
             </ListBox.Styles>
         </ListBox>
-        <ListBox x:Name="SelectionB" Grid.Row="1" Grid.Column="1" Items="{Binding MediaDataB.ListBoxItems}" SelectionMode="Single"
+        <ListBox x:Name="SelectionB" Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MediaDataB.ListBoxItems}" SelectionMode="Single"
                  Margin="0 0 2 0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -134,32 +138,32 @@
 			<Grid Grid.Column="0" ColumnDefinitions="65,*">
 				<Button Grid.Column="0" Margin="5 16 0 16" Content="Output:" Click="SelectOutputButton_OnClick" Padding="0" Width="60"/>
 				<TextBox x:Name="FilePathOut" Grid.Column="1" DragDrop.AllowDrop="True" VerticalAlignment="Center" VerticalContentAlignment="Center"
-				         FontSize="16" Margin="5 0 10 0" BorderBrush="#454545"  Height="26"/>
+				         FontSize="12" Margin="5 0 10 0" BorderBrush="#454545"  Height="26"/>
 			</Grid>
 
 			<Grid Grid.Column="2" ColumnDefinitions="100,64,90,40,*" RowDefinitions="*,*">
 				<Label Grid.Column="0" Grid.Row="0" Content="Track A for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center"
                        Padding="0" Margin="0" Height="20"/>
-				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"
-                          VerticalAlignment="Center" Height="20" Width="64" Items="{Binding MediaDataA.ComboBoxItems}"/>
+				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="True" SelectionChanged="ComboBoxSelectionChanged"
+                          VerticalAlignment="Center" Height="20" Width="64" ItemsSource="{Binding MediaDataA.ComboBoxItems}"/>
 				<Label Grid.Column="0" Grid.Row="1" Content="Track B for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center"
                        Padding="0" Margin="0" Height="20"/>
-				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"
-                          VerticalAlignment="Center" Height="20" Width="64" Items="{Binding MediaDataB.ComboBoxItems}"/>
+				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="True" SelectionChanged="ComboBoxSelectionChanged"
+                          VerticalAlignment="Center" Height="20" Width="64" ItemsSource="{Binding MediaDataB.ComboBoxItems}"/>
 
 				<Label Grid.Column="2" Grid.Row="0" Content="Sample start (s):" Padding="0" Margin="10,0,0,0"
 				       VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left" Height="20"/>
 				<TextBox x:Name="SampleStart" Grid.Column="3" Grid.Row="0" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="0"
-				         Margin="5 2" BorderBrush="#454545" Height="20" Width="40" MinWidth="10"/>
+				         Margin="5 2" BorderBrush="#454545" Height="20" Width="40" MinWidth="10" Padding="5,0"/>
 
 				<Label Grid.Column="2" Grid.Row="1" Content="Sample time (s):" Padding="0" Margin="10,0,0,0"
 				       VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Left" Height="20"/>
 				<TextBox x:Name="SampleDuration" Grid.Column="3" Grid.Row="1" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="20"
-				         Margin="5 2" BorderBrush="#454545" Height="20" Width="40" MinWidth="10"/>
+				         Margin="5 2" BorderBrush="#454545" Height="20" Width="40" MinWidth="10" Padding="5,0"/>
 
 				<CheckBox x:Name="NormalizeCheckBox" Grid.Row="0" Grid.Column="4" Content="Normalize Audio" IsChecked="True"/>
 				<CheckBox x:Name="UseMkvMergeCheckBox" Grid.Row="1" Grid.Column="4" Content="Use mkvmerge" IsChecked="false"
-                          Checked="UseMkvMergeCheckBox_CheckChange" Unchecked="UseMkvMergeCheckBox_CheckChange"/>
+                          IsCheckedChanged="UseMkvMergeCheckBox_CheckChange"/>
 			</Grid>
 		</Grid>
 

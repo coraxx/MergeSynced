@@ -8,12 +8,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using MergeSynced.Audio;
 using MergeSynced.Controls;
@@ -31,6 +31,9 @@ namespace MergeSynced.Views
 
         public MergeSyncedViewModel MainViewModel = new MergeSyncedViewModel();
 
+        private const bool UseNotifications = true;
+        private WindowNotificationManager? _notificationManager;
+
         private Stopwatch _sw = Stopwatch.StartNew();
 
         private readonly ExternalProcesses _ep = new ExternalProcesses();
@@ -46,8 +49,6 @@ namespace MergeSynced.Views
         private readonly bool _ffmpegExisting;
         private readonly bool _ffprobeExisting;
         private readonly bool _mkvmergeExisting;
-
-        private readonly OperatingSystemType _osType;
 
         private readonly StringTraceListener _trace;
 
@@ -68,19 +69,18 @@ namespace MergeSynced.Views
         public MainWindow()
         {
             InitializeComponent();
-            Title = $"Merge Synced - v{Assembly.GetExecutingAssembly().GetName().Version?.ToString().TrimEnd('0').TrimEnd('.')}";
             DataContext = MainViewModel;
+
+            Title = $"Merge Synced - v{Assembly.GetExecutingAssembly().GetName().Version?.ToString().TrimEnd('0').TrimEnd('.')}";
 
             // Create temporary working directory
             _workingDir = CreateTempDir();
 
             // Add event handler in order to expose logs
-            _trace = new StringTraceListener(Debugger.IsAttached, Path.Combine(_workingDir, "log.txt"));
+            _trace = new StringTraceListener(true, Path.Combine(_workingDir, "log.txt"));
             _trace.PropertyChanged += TraceOnPropertyChanged;
             Trace.Listeners.Add(_trace);
             Trace.AutoFlush = true;
-
-            _osType = AvaloniaLocator.Current.GetService<IRuntimePlatform>()!.GetRuntimeInfo().OperatingSystem;
 
             SampleStart.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput!, RoutingStrategies.Tunnel);
             SampleDuration.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput!, RoutingStrategies.Tunnel);
@@ -94,20 +94,17 @@ namespace MergeSynced.Views
             SetWpfPlotStatic(WpfPlotCrossCorrelation);
 
             // Check if ffmpeg and mkvmerge is available
-            switch (_osType)
+            if (OperatingSystem.IsWindows())
             {
-                case OperatingSystemType.WinNT:
-                    _ffmpegExisting = SearchBinaryInPath("ffmpeg.exe");
-                    _ffprobeExisting = SearchBinaryInPath("ffprobe.exe");
-                    _mkvmergeExisting = SearchBinaryInPath("mkvmerge.exe");
-                    break;
-
-                case OperatingSystemType.OSX:
-                case OperatingSystemType.Linux:
-                    _ffmpegExisting = SearchBinaryInPath("ffmpeg");
-                    _ffprobeExisting = SearchBinaryInPath("ffprobe");
-                    _mkvmergeExisting = SearchBinaryInPath("mkvmerge");
-                    break;
+                _ffmpegExisting = SearchBinaryInPath("ffmpeg.exe");
+                _ffprobeExisting = SearchBinaryInPath("ffprobe.exe");
+                _mkvmergeExisting = SearchBinaryInPath("mkvmerge.exe");
+            }
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                _ffmpegExisting = SearchBinaryInPath("ffmpeg");
+                _ffprobeExisting = SearchBinaryInPath("ffprobe");
+                _mkvmergeExisting = SearchBinaryInPath("mkvmerge");
             }
 
 
@@ -129,7 +126,19 @@ namespace MergeSynced.Views
             if (!_ffmpegExisting && !_ffprobeExisting && !_mkvmergeExisting) SwitchButtonState(ProbeButton, false, "No ffmpeg in PATH", true);
         }
 
-        private void MainWindow_OnClosing(object sender, CancelEventArgs e)
+        private void Window_OnLoaded(object? sender, RoutedEventArgs e)
+        {
+            if (UseNotifications)
+            {
+                _notificationManager = new WindowNotificationManager(this)
+                {
+                    Position = NotificationPosition.TopRight,
+                    MaxItems = 5
+                };
+            }
+        }
+
+        private void Window_OnClosing(object? sender, WindowClosingEventArgs e)
         {
             // Close log file
             _trace.Logfile?.Close();
@@ -174,31 +183,31 @@ namespace MergeSynced.Views
             if (pathData == null) return false;
 
             List<string> paths = new List<string>();
-            switch (_osType)
+            if (OperatingSystem.IsWindows())
             {
-                case OperatingSystemType.WinNT:
-                    paths = pathData.Split(';').ToList();
-                    break;
+                paths = pathData.Split(';').ToList();
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                paths = pathData.Split(':').ToList();
 
-                case OperatingSystemType.OSX:
+                // If .app bundle is called, current user PATH is normally not passed in, so try a few common ones
+                if (!paths.Any(path => File.Exists(Path.Combine(path, binaryName))) && !_initialPathExtensionOnMacDone)
+                {
+                    string appBundleMissingPaths =
+                        "/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin";
+                    Environment.SetEnvironmentVariable("PATH", $"{appBundleMissingPaths}:{pathData}");
+                    _initialPathExtensionOnMacDone = true;
+                    Trace.WriteLine(
+                        $"Could not find {binaryName} in {pathData}, adding {appBundleMissingPaths} to $PATH and trying again");
+                    pathData = Environment.GetEnvironmentVariable("PATH");
+                    if (pathData == null) return false;
                     paths = pathData.Split(':').ToList();
-
-                    // If .app bundle is called, current user PATH is normally not passed in, so try a few common ones
-                    if (!paths.Any(path => File.Exists(Path.Combine(path, binaryName))) && !_initialPathExtensionOnMacDone)
-                    {
-                        string appBundleMissingPaths = "/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin";
-                        Environment.SetEnvironmentVariable("PATH", $"{appBundleMissingPaths}:{pathData}");
-                        _initialPathExtensionOnMacDone = true;
-                        Trace.WriteLine($"Could not find {binaryName} in {pathData}, adding {appBundleMissingPaths} to $PATH and trying again");
-                        pathData = Environment.GetEnvironmentVariable("PATH");
-                        if (pathData == null) return false;
-                        paths = pathData.Split(':').ToList();
-                    }
-                    break;
-
-                case OperatingSystemType.Linux:
-                    paths = pathData.Split(':').ToList();
-                    break;
+                }
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                paths = pathData.Split(':').ToList();
             }
 
             return paths.Any(path => File.Exists(Path.Combine(path, binaryName)));
@@ -405,7 +414,7 @@ namespace MergeSynced.Views
 
             // A
             ComboBoxItem? co = SelectTrackA.SelectedItem as ComboBoxItem;
-            int selectedTrack = int.Parse((co != null ? co.Content.ToString() : "0")!);
+            int selectedTrack = int.Parse((co != null && co.Content != null ? co.Content.ToString() : "0")!);
             string inputA = Path.Combine(_workingDir, "inputA.wav");
 
             if (MainViewModel.MediaDataA.Duration.TotalSeconds > sampleDurationSeconds)
@@ -441,7 +450,7 @@ namespace MergeSynced.Views
 
             // B
             co = SelectTrackB.SelectedItem as ComboBoxItem;
-            selectedTrack = int.Parse((co != null ? co.Content.ToString() : "0")!);
+            selectedTrack = int.Parse((co != null && co.Content != null ? co.Content.ToString() : "0")!);
             string inputB = Path.Combine(_workingDir, "inputB.wav");
 
             if (MainViewModel.MediaDataB.Duration.TotalSeconds > sampleDurationSeconds)
@@ -883,20 +892,11 @@ namespace MergeSynced.Views
         {
             try
             {
-                switch (_osType)
-                {
-                    case OperatingSystemType.WinNT:
-                        Process.Start("explorer.exe", _workingDir);
-                        break;
-
-                    case OperatingSystemType.OSX:
-                        Process.Start("open", _workingDir);
-                        break;
-
-                    case OperatingSystemType.Linux:
-                        Process.Start("open", _workingDir);
-                        break;
-                }
+                if (OperatingSystem.IsWindows())
+                    Process.Start("explorer.exe", _workingDir);
+                else if (OperatingSystem.IsMacOS())
+                    Process.Start("open", _workingDir);
+                else if (OperatingSystem.IsLinux()) Process.Start("open", _workingDir);
             }
             catch (Exception exception)
             {
@@ -907,44 +907,112 @@ namespace MergeSynced.Views
 
         private async void SelectOutputButton_OnClick(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            if (!StorageProvider.CanSave)
+            {
+                _notificationManager?.Show(new Notification("Error", "Save file picker not available on this platform", NotificationType.Error));
+                return;
+            }
 
-            string? dirName = File.Exists(FilePathA.Text) ? Path.GetDirectoryName((string?)FilePathA.Text) : null;
+            string? pathToCheck = File.Exists(FilePathOut.Text) ? FilePathOut.Text : FilePathA.Text;
+            string? dirName = File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string? fileName = Path.GetFileNameWithoutExtension((string?)FilePathA.Text);
             string? fileExt = Path.GetExtension((string?)FilePathA.Text);
-            saveFileDialog.Directory = dirName ?? @"C:\temp";
-            saveFileDialog.InitialFileName = string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(fileExt) ? "SyncedMerged.mp4" : $"{fileName}_SyncedMerged{fileExt}";
-            string? saveFileResult = await saveFileDialog.ShowAsync(this);
-            if (saveFileResult == null) return;
-            FilePathOut.Text = saveFileResult;
+
+            FilePickerSaveOptions filePickerOptions = new FilePickerSaveOptions()
+            {
+                Title = "Save new file as...",
+                DefaultExtension = fileExt?.TrimStart('.'),
+                ShowOverwritePrompt = true,
+                SuggestedFileName = string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(fileExt) ? "SyncedMerged" : $"{fileName}_SyncedMerged"
+            };
+
+            if (!Uri.TryCreate(dirName, UriKind.Absolute, out Uri? folderLink))
+            {
+                Uri.TryCreate("file://" + dirName, UriKind.Absolute, out folderLink);
+            }
+
+            if (folderLink is not null)
+            {
+                IStorageFolder? folder = await StorageProvider.TryGetFolderFromPathAsync(folderLink);
+                if (folder != null) filePickerOptions.SuggestedStartLocation = folder;
+            }
+
+            IStorageFile? dialog = await StorageProvider.SaveFilePickerAsync(filePickerOptions);
+
+            if (!string.IsNullOrEmpty(dialog?.Name))
+            {
+                FilePathOut.Text = dialog.Path.LocalPath;
+            }
         }
 
         private async void SelectInputButtonA_OnClick(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (!StorageProvider.CanOpen)
+            {
+                _notificationManager?.Show(new Notification("Error", "File picker not available on this platform", NotificationType.Error));
+                return;
+            }
 
-            string pathToCheck = string.IsNullOrEmpty(FilePathA.Text) ? FilePathB.Text : FilePathA.Text;
-            string? dirName = File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null;
-            string fileName = Path.GetFileNameWithoutExtension(pathToCheck);
-            openFileDialog.Directory = dirName ?? @"C:\";
-            openFileDialog.InitialFileName = fileName;
-            string[]? openFileResult = await openFileDialog.ShowAsync(this);
-            if (openFileResult == null) return;
-            FilePathA.Text = openFileResult[0];
+            FilePickerOpenOptions filePickerOptions = new FilePickerOpenOptions()
+            {
+                Title = "Select file for input A",
+                AllowMultiple = false
+            };
+            string? pathToCheck = string.IsNullOrEmpty(FilePathA.Text) ? FilePathB.Text : FilePathA.Text;
+            string? dirName = (File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            if (!Uri.TryCreate(dirName, UriKind.Absolute, out Uri? folderLink))
+            {
+                Uri.TryCreate("file://" + dirName, UriKind.Absolute, out folderLink);
+            }
+
+            if (folderLink is not null)
+            {
+                IStorageFolder? folder = await StorageProvider.TryGetFolderFromPathAsync(folderLink);
+                if (folder != null) filePickerOptions.SuggestedStartLocation = folder;
+            }
+
+            IReadOnlyList<IStorageFile> dialog = await StorageProvider.OpenFilePickerAsync(filePickerOptions);
+            
+            if (dialog.Count > 0)
+            {
+                FilePathA.Text = dialog[0].Path.LocalPath;
+            }
         }
 
         private async void SelectInputButtonB_OnClick(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (!StorageProvider.CanOpen)
+            {
+                _notificationManager?.Show(new Notification("Error", "File picker not available on this platform", NotificationType.Error));
+                return;
+            }
 
-            string pathToCheck = string.IsNullOrEmpty(FilePathB.Text) ? FilePathA.Text : FilePathB.Text;
-            string? dirName = File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null;
-            string fileName = Path.GetFileNameWithoutExtension(pathToCheck);
-            openFileDialog.Directory = dirName ?? @"C:\";
-            openFileDialog.InitialFileName = fileName;
-            string[]? openFileResult = await openFileDialog.ShowAsync(this);
-            if (openFileResult == null) return;
-            FilePathB.Text = openFileResult[0];
+            FilePickerOpenOptions filePickerOptions = new FilePickerOpenOptions()
+            {
+                Title = "Select file for input B",
+                AllowMultiple = false
+            };
+            string? pathToCheck = string.IsNullOrEmpty(FilePathB.Text) ? FilePathA.Text : FilePathB.Text;
+            string? dirName = (File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            if (!Uri.TryCreate(dirName, UriKind.Absolute, out Uri? folderLink))
+            {
+                Uri.TryCreate("file://" + dirName, UriKind.Absolute, out folderLink);
+            }
+
+            if (folderLink is not null)
+            {
+                IStorageFolder? folder = await StorageProvider.TryGetFolderFromPathAsync(folderLink);
+                if (folder != null) filePickerOptions.SuggestedStartLocation = folder;
+            }
+
+            IReadOnlyList<IStorageFile> dialog = await StorageProvider.OpenFilePickerAsync(filePickerOptions);
+
+            if (dialog.Count > 0)
+            {
+                FilePathB.Text = dialog[0].Path.LocalPath;
+            }
         }
 
         #endregion
@@ -989,6 +1057,8 @@ namespace MergeSynced.Views
                 {
                     StatusLabel.Foreground = error ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.LimeGreen);
                 }
+
+                if (error) _notificationManager?.Show(new Notification("Error", status, NotificationType.Error));
             });
         }
 
@@ -1076,10 +1146,12 @@ namespace MergeSynced.Views
             ProbeButton.IsEnabled = _ffmpegExisting || !_mkvmergeExisting || UseMkvMergeCheckBox.IsChecked == null || !(bool)UseMkvMergeCheckBox.IsChecked;
         }
 
-        private void FileDrop_PreviewAck(object sender, DragEventArgs e)
+        /*
+        private void FileDrop_PreviewAck(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
         }
+        */
 
         private void UseMkvMergeCheckBox_CheckChange(object sender, RoutedEventArgs e)
         {
