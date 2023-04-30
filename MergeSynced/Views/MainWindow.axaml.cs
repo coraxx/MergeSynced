@@ -8,20 +8,21 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using MergeSynced.Audio;
 using MergeSynced.Controls;
 using MergeSynced.Tools;
 using MergeSynced.ViewModels;
-using ScottPlot.Avalonia;
+using ScottPlot.Control;
 using ScottPlot.Plottables;
-using Colors = Avalonia.Media.Colors;
 
 namespace MergeSynced.Views
 {
@@ -42,6 +43,7 @@ namespace MergeSynced.Views
         private Match _timeMatchFfmpegProg = null!;
         private TimeSpan _currentTimeFfmpegProg;
 
+        private readonly string _settingsDir;
         private readonly string _workingDir;
 
         private const int ProbeLengthInSeconds = 20;
@@ -71,7 +73,10 @@ namespace MergeSynced.Views
             InitializeComponent();
             DataContext = MainViewModel;
 
-            Title = $"Merge Synced - v{Assembly.GetExecutingAssembly().GetName().Version?.ToString().TrimEnd('0').TrimEnd('.')}";
+            Title = $"{Assembly.GetExecutingAssembly().GetName().Name} - v{Assembly.GetExecutingAssembly().GetName().Version?.ToString().TrimEnd('0').TrimEnd('.')}";
+
+            // Get settings folder
+            _settingsDir = CreateSettingsDir();
 
             // Create temporary working directory
             _workingDir = CreateTempDir();
@@ -89,7 +94,15 @@ namespace MergeSynced.Views
             FilePathB.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
             FilePathOut.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
 
-            // Plot without interaction
+            ThemeSelect.ItemsSource = new[]
+            {
+                ThemeVariant.Default,
+                ThemeVariant.Dark,
+                ThemeVariant.Light
+            };
+            ThemeSelect.SelectedIndex = 0;
+
+            // Setup plots
             SetWpfPlotStatic(WpfPlotAudioWaves);
             SetWpfPlotStatic(WpfPlotCrossCorrelation);
 
@@ -119,7 +132,7 @@ namespace MergeSynced.Views
             if (_mkvmergeExisting)
             {
                 MkvmergeAvailableState.Background = new SolidColorBrush(Colors.LimeGreen);
-                UseMkvMergeCheckBox.IsChecked = !_ffmpegExisting && !_ffprobeExisting;
+                MainViewModel.UseMkvmerge = !_ffmpegExisting && !_ffprobeExisting;
                 ProbeButton.ClearValue(BackgroundProperty);
             }
 
@@ -136,27 +149,44 @@ namespace MergeSynced.Views
                     MaxItems = 5
                 };
             }
+            // Load settings
+            SettingsManager.FilePath = Path.Combine(_settingsDir, "MergeSynced_Settings.json");
+            SettingsManager.Load();
+            ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;
+
+            if (Application.Current != null && Application.Current.RequestedThemeVariant != SettingsManager.UserSettings.SelectedTheme)
+            {
+                Application.Current.RequestedThemeVariant = SettingsManager.UserSettings.SelectedTheme;
+
+                // Update plot theme
+                SetWpfPlotStatic(WpfPlotAudioWaves);
+                SetWpfPlotStatic(WpfPlotCrossCorrelation);
+            }
         }
 
         private void Window_OnClosing(object? sender, WindowClosingEventArgs e)
         {
+            // Save settings
+            SettingsManager.Save();
             // Close log file
             _trace.Logfile?.Close();
             // Clean up temp dir
-            if (_ffmpegExisting) Directory.Delete(_workingDir, true);
+            if (!string.IsNullOrEmpty(_workingDir)) Directory.Delete(_workingDir, true);
         }
 
         #endregion
 
         #region Setup helper methods
 
-        private static void SetWpfPlotStatic(AvaPlot wpfPlot)
+        private static void SetWpfPlotStatic(IPlotControl wpfPlot)
         {
             wpfPlot.Plot.XAxes.ForEach(x => x.IsVisible = false);
             wpfPlot.Plot.YAxes.ForEach(x => x.IsVisible = false);
             wpfPlot.Plot.Grids.Clear();
-            //wpfPlot.Plot.Style(ScottPlot.Style.Gray1);
-            
+
+            if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"), ScottPlot.Color.FromHex("#232323"));
+            else wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"), ScottPlot.Color.FromHex("#FFFFFFFF"));
+
             //wpfPlot.Configuration.LeftClickDragPan = false;
             //wpfPlot.Configuration.RightClickDragZoom = false;
             //wpfPlot.Configuration.DoubleClickBenchmark = false;
@@ -166,6 +196,13 @@ namespace MergeSynced.Views
             //wpfPlot.Configuration.LockHorizontalAxis = true;
             //wpfPlot.Configuration.LockVerticalAxis = true;
             wpfPlot.Refresh();
+        }
+
+        public string CreateSettingsDir()
+        {
+            string settingsDirPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Assembly.GetExecutingAssembly().GetName().Name ?? "MergeSynced");
+            Directory.CreateDirectory(settingsDirPath);
+            return settingsDirPath;
         }
 
         public string CreateTempDir()
@@ -215,7 +252,19 @@ namespace MergeSynced.Views
 
         #endregion
 
-        #region Button logic
+        #region Controls logic
+
+        private void ThemeSelect_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (Application.Current == null || ThemeSelect.SelectedItem == null) return;
+            
+            Application.Current.RequestedThemeVariant = (ThemeVariant)ThemeSelect.SelectedItem;
+            SettingsManager.UserSettings.SelectedTheme = Application.Current.RequestedThemeVariant;
+
+            // Update plot theme
+            SetWpfPlotStatic(WpfPlotAudioWaves);
+            SetWpfPlotStatic(WpfPlotCrossCorrelation);
+        }
 
         private async void Probe_OnClick(object sender, RoutedEventArgs e)
         {
@@ -225,15 +274,13 @@ namespace MergeSynced.Views
                 return;
             }
 
-            bool useMkvChecked = UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked;
-
-            if (!_ffprobeExisting && !useMkvChecked)
+            if (!_ffprobeExisting && !MainViewModel.UseMkvmerge)
             {
                 SwitchButtonState(ProbeButton, false, "No ffprobe in PATH", true);
                 return;
             }
 
-            if (!_mkvmergeExisting && useMkvChecked)
+            if (!_mkvmergeExisting && MainViewModel.UseMkvmerge)
             {
                 SwitchButtonState(ProbeButton, false, "No mkvmerge in PATH", true);
                 return;
@@ -256,7 +303,7 @@ namespace MergeSynced.Views
 
             // Using mkvmerge /////////////////////////////////////////////////////////////////////////////////////////
             bool result;
-            if (useMkvChecked)
+            if (MainViewModel.UseMkvmerge)
             {
                 // A
                 _ep.CallMkvmerge($"--identification-format json --identify \"{FilePathA.Text}\"",
@@ -344,6 +391,7 @@ namespace MergeSynced.Views
 
             AnalyzeButton.IsEnabled = true;
             ProbeButton.ClearValue(BackgroundProperty);
+            ProbeButton.ClearValue(ForegroundProperty);
             SwitchButtonState(ProbeButton, false, "Probing done");
         }
 
@@ -405,9 +453,9 @@ namespace MergeSynced.Views
                 return;
             }
 
-            bool durationResult = int.TryParse((string?)SampleDuration.Text, out int sampleDurationSeconds);
+            bool durationResult = int.TryParse(SampleDuration.Text, out int sampleDurationSeconds);
             if (!durationResult) sampleDurationSeconds = ProbeLengthInSeconds;
-            int.TryParse((string?)SampleStart.Text, out int startTime);
+            int.TryParse(SampleStart.Text, out int startTime);
 
             // Down mix to mono and shorten files
             string args;
@@ -503,7 +551,7 @@ namespace MergeSynced.Views
             }
 
             // Normalize data
-            if (NormalizeCheckBox.IsChecked != null && (bool)NormalizeCheckBox.IsChecked)
+            if (MainViewModel.NormalizeAudio)
             {
 
                 float maxA = l1.Max();
@@ -599,6 +647,7 @@ namespace MergeSynced.Views
 
             SwitchButtonState(AnalyzeButton, false, "Analysis done");
             AnalyzeButton.ClearValue(BackgroundProperty);
+            AnalyzeButton.ClearValue(ForegroundProperty);
             MainViewModel.ProgressPercent = 100;
             GC.Collect();
         }
@@ -607,8 +656,6 @@ namespace MergeSynced.Views
         {
             ProbeButton.IsEnabled = false;
             AnalyzeButton.IsEnabled = false;
-
-            bool useMkvChecked = UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked;
 
             // Check A selection
             bool nothingChecked = true;
@@ -630,7 +677,7 @@ namespace MergeSynced.Views
                 return;
             }
 
-            if (!_mkvmergeExisting && useMkvChecked)
+            if (!_mkvmergeExisting && MainViewModel.UseMkvmerge)
             {
                 SwitchButtonState(MergeButton, false, "No mkvmerge in PATH", true);
                 return;
@@ -652,7 +699,7 @@ namespace MergeSynced.Views
 
             try
             {
-                if (!Path.IsPathRooted((string?)FilePathOut.Text) || !Directory.Exists(Path.GetDirectoryName((string?)FilePathOut.Text)))
+                if (!Path.IsPathRooted(FilePathOut.Text) || !Directory.Exists(Path.GetDirectoryName((string?)FilePathOut.Text)))
                 {
                     AnalyzeButton.IsEnabled = true;
                     SwitchButtonState(MergeButton, false, "Output filepath invalid", true);
@@ -672,7 +719,7 @@ namespace MergeSynced.Views
 
             // Build command line argument
             // Using mkvmerge /////////////////////////////////////////////////////////////////////////////////////////
-            if (useMkvChecked)
+            if (MainViewModel.UseMkvmerge)
             {
                 string delayFormatted = Convert.ToInt32(Math.Round(-1 * MainViewModel.SyncDelay * 1000)).ToString(); // Delay has to be inverted and in ms
                 string args = $"--output \"{FilePathOut.Text}\"";
@@ -915,8 +962,8 @@ namespace MergeSynced.Views
 
             string? pathToCheck = File.Exists(FilePathOut.Text) ? FilePathOut.Text : FilePathA.Text;
             string? dirName = File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string? fileName = Path.GetFileNameWithoutExtension((string?)FilePathA.Text);
-            string? fileExt = Path.GetExtension((string?)FilePathA.Text);
+            string? fileName = Path.GetFileNameWithoutExtension(FilePathA.Text);
+            string? fileExt = Path.GetExtension(FilePathA.Text);
 
             FilePickerSaveOptions filePickerOptions = new FilePickerSaveOptions()
             {
@@ -959,7 +1006,7 @@ namespace MergeSynced.Views
                 AllowMultiple = false
             };
             string? pathToCheck = string.IsNullOrEmpty(FilePathA.Text) ? FilePathB.Text : FilePathA.Text;
-            string? dirName = (File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string dirName = (File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             if (!Uri.TryCreate(dirName, UriKind.Absolute, out Uri? folderLink))
             {
@@ -994,7 +1041,7 @@ namespace MergeSynced.Views
                 AllowMultiple = false
             };
             string? pathToCheck = string.IsNullOrEmpty(FilePathB.Text) ? FilePathA.Text : FilePathB.Text;
-            string? dirName = (File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string dirName = (File.Exists(pathToCheck) ? Path.GetDirectoryName(pathToCheck) : null) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             if (!Uri.TryCreate(dirName, UriKind.Absolute, out Uri? folderLink))
             {
@@ -1042,7 +1089,7 @@ namespace MergeSynced.Views
                 //FilePathA.Allow = !blocked;
                 //FilePathB.AllowDrop = !blocked;
                 ProbeButton.IsEnabled = !blocked &&
-                                        (UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked && _mkvmergeExisting || _ffprobeExisting);
+                                        (MainViewModel.UseMkvmerge && _mkvmergeExisting || _ffprobeExisting && !MainViewModel.UseMkvmerge);
                 SelectTrackA.IsEnabled = !blocked && MainViewModel.MediaDataA!.ComboBoxItems.Count > 0;
                 SelectTrackB.IsEnabled = !blocked && MainViewModel.MediaDataB!.ComboBoxItems.Count > 0;
             });
@@ -1114,11 +1161,11 @@ namespace MergeSynced.Views
         private void File_Drop(object sender, DragEventArgs e)
         {
             // Process file names
-            IEnumerable<string>? filePaths = e.Data.GetFileNames();
+            IEnumerable<IStorageItem>? filePaths = e.Data.GetFiles();
             if (sender is not TextBox tb || filePaths == null) return;
 
             // Write to textbox
-            tb.Text = filePaths.First();
+            tb.Text = filePaths.First().TryGetLocalPath();
             switch (tb.Name)
             {
                 case "FilePathA":
@@ -1130,6 +1177,7 @@ namespace MergeSynced.Views
                     MergeButton.IsEnabled = false;
                     AnalyzeButton.IsEnabled = false;
                     ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
+                    if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") ProbeButton.Foreground = Brushes.Black;
                     break;
                 case "FilePathB":
                     MainViewModel.MediaDataB?.Clear();
@@ -1140,28 +1188,23 @@ namespace MergeSynced.Views
                     MergeButton.IsEnabled = false;
                     AnalyzeButton.IsEnabled = false;
                     ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
+                    if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") ProbeButton.Foreground = Brushes.Black;
                     break;
             }
             SwitchButtonState(ProbeButton, false);
-            ProbeButton.IsEnabled = _ffmpegExisting || !_mkvmergeExisting || UseMkvMergeCheckBox.IsChecked == null || !(bool)UseMkvMergeCheckBox.IsChecked;
         }
-
-        /*
-        private void FileDrop_PreviewAck(object sender, RoutedEventArgs e)
-        {
-            e.Handled = true;
-        }
-        */
 
         private void UseMkvMergeCheckBox_CheckChange(object sender, RoutedEventArgs e)
         {
             ClearProbeData();
             MergeButton.IsEnabled = false;
             AnalyzeButton.IsEnabled = false;
-            if (FilePathA.Text?.Length > 0 || FilePathB.Text?.Length > 0) ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
-            ProbeButton.IsEnabled =
-                UseMkvMergeCheckBox.IsChecked != null && (bool)UseMkvMergeCheckBox.IsChecked && _mkvmergeExisting ||
-                _ffprobeExisting;
+            if (FilePathA.Text?.Length > 0 || FilePathB.Text?.Length > 0)
+            {
+                ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
+                if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") ProbeButton.Foreground = Brushes.Black;
+            }
+            ProbeButton.IsEnabled = MainViewModel.UseMkvmerge && _mkvmergeExisting || _ffprobeExisting && !MainViewModel.UseMkvmerge;
         }
 
         private void SwitchInputs_OnClick(object sender, RoutedEventArgs e)
@@ -1174,19 +1217,21 @@ namespace MergeSynced.Views
             MergeButton.IsEnabled = false;
             AnalyzeButton.IsEnabled = false;
             ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
+            if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") ProbeButton.Foreground = Brushes.Black;
         }
 
         // TextBoxInput Check for UInt16
         private void Uint32_OnPreviewTextInput(object sender, TextInputEventArgs e)
         {
             if (!(e.Source is TextBox tb)) return;
-            string str = tb.Text.Insert(tb.CaretIndex, e.Text!);
+            string? str = tb.Text?.Insert(tb.CaretIndex, e.Text!);
             e.Handled = !uint.TryParse(str, out _);
         }
 
         private void ComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             AnalyzeButton.Background = new SolidColorBrush(Colors.DarkOrange);
+            if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") AnalyzeButton.Foreground = Brushes.Black;
         }
 
         #endregion

@@ -3,7 +3,7 @@
              xmlns:local="using:MergeSynced"
              x:Class="MergeSynced.App"
              Name="MergeSynced"
-             RequestedThemeVariant="Light">
+             RequestedThemeVariant="Default">
 
 	<NativeMenu.Menu>
 		<NativeMenu>
@@ -12,8 +12,17 @@
 	</NativeMenu.Menu>
     
     <Application.Styles>
-        <FluentTheme />
-        <!--<StyleInclude Source="/Controls/CustomCheckBox.axaml" />-->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark"
+                                       RegionColor="#FF232323"
+                                       AltHigh="#FF232323"
+                                       AltLow="#FF232323"
+                                       AltMedium="#FF232323"
+                                       AltMediumHigh="#FF232323"
+                                       AltMediumLow="#FF232323"  />
+            </FluentTheme.Palettes>
+        </FluentTheme>
     </Application.Styles>
 
     <Application.Resources>

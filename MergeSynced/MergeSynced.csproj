@@ -69,6 +69,7 @@
     </None>
   </ItemGroup>
 
+
   <Target Name="PostClean" AfterTargets="Clean">
     <!-- Keep Nuget configs in obj to avoid the need of calling dotnet restore -->
     <RemoveDir Directories="$(BaseIntermediateOutputPath)/Debug" />     <!-- obj/Debug -->

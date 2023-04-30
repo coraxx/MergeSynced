@@ -25,7 +25,6 @@ namespace MergeSynced
             }
 
             base.OnFrameworkInitializationCompleted();
-
         }
 
         private void AboutMenuItem_OnClick(object? sender, EventArgs e)

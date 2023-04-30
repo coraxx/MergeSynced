@@ -1,13 +1,44 @@
-﻿using Avalonia.Media;
-using MergeSynced.Controls;
-using System;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
+using MergeSynced.Controls;
 
 namespace MergeSynced.ViewModels
 {
     public class MergeSyncedViewModel : ViewModelBase
     {
         #region Fields and properties
+
+        #region Configuration
+
+        private bool _normalizeAudio = true;
+        public bool NormalizeAudio
+        {
+            get => _normalizeAudio;
+            set
+            {
+                if (value == _normalizeAudio) return;
+                _normalizeAudio = value;
+                OnPropertyChanged();
+                Tools.SettingsManager.UserSettings.NormalizeAudio = value;
+            }
+        }
+
+        private bool _useMkvmerge;
+        public bool UseMkvmerge
+        {
+            get => _useMkvmerge;
+            set
+            {
+                if (value == _useMkvmerge) return;
+                _useMkvmerge = value;
+                OnPropertyChanged();
+                Tools.SettingsManager.UserSettings.UseMkvmerge = value;
+            }
+        }
+
+        #endregion
 
         #region Items
 
@@ -128,8 +159,7 @@ namespace MergeSynced.ViewModels
             }
         }
 
-        private SolidColorBrush _corrPercentColor = new SolidColorBrush(Colors.Black);
-
+        private SolidColorBrush _corrPercentColor = SolidColorBrush.Parse("#FF000000");
         public SolidColorBrush CorrPercentColor
         {
             get => _corrPercentColor;
@@ -146,16 +176,25 @@ namespace MergeSynced.ViewModels
 
         public MergeSyncedViewModel()
         {
-            if (!Avalonia.Controls.Design.IsDesignMode) return;
+            if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") CorrPercentColor = SolidColorBrush.Parse("#FFFFFFFF");
 
-            CheckBoxMedia itemA1 = new CheckBoxMedia()
+            // Load settings
+            Tools.SettingsManager.SettingsLoaded += (sender, args) => {
+                NormalizeAudio = Tools.SettingsManager.UserSettings.NormalizeAudio;
+                UseMkvmerge = Tools.SettingsManager.UserSettings.UseMkvmerge;
+            };
+
+            // Design time dummy items
+            if (!Design.IsDesignMode) return;
+
+            CheckBoxMedia itemA1 = new CheckBoxMedia
             {
                 Description = "Item 1",
                 Index = 1,
                 LanguageId = "EN",
                 CodecType = "wav"
             };
-            CheckBoxMedia itemA2 = new CheckBoxMedia()
+            CheckBoxMedia itemA2 = new CheckBoxMedia
             {
                 Description = "Item 1",
                 Index = 1,
@@ -163,7 +202,7 @@ namespace MergeSynced.ViewModels
                 CodecType = "wav",
                 IsSelected = true
             };
-            CheckBoxMedia itemB1 = new CheckBoxMedia()
+            CheckBoxMedia itemB1 = new CheckBoxMedia
             {
                 Description = "Item 1",
                 Index = 1,
@@ -171,7 +210,7 @@ namespace MergeSynced.ViewModels
                 CodecType = "wav",
                 IsSelected = true
             };
-            CheckBoxMedia itemB2 = new CheckBoxMedia()
+            CheckBoxMedia itemB2 = new CheckBoxMedia
             {
                 Description = "Item 2",
                 Index = 2,
@@ -183,14 +222,14 @@ namespace MergeSynced.ViewModels
             MediaDataB.ListBoxItems.Add(itemB1);
             MediaDataB.ListBoxItems.Add(itemB2);
 
-            ComboBoxItem comboItemA1 = new ComboBoxItem() { Content = "1", IsSelected = true };
-            ComboBoxItem comboItemA2 = new ComboBoxItem() { Content = "2" };
+            ComboBoxItem comboItemA1 = new ComboBoxItem { Content = "1", IsSelected = true };
+            ComboBoxItem comboItemA2 = new ComboBoxItem { Content = "2" };
             MediaDataA.ComboBoxItems.Add(comboItemA1);
             MediaDataA.ComboBoxItems.Add(comboItemA2);
 
-            ComboBoxItem comboItemB1 = new ComboBoxItem() { Content = "2", IsSelected = true };
-            ComboBoxItem comboItemB2 = new ComboBoxItem() { Content = "3" };
-            ComboBoxItem comboItemB3 = new ComboBoxItem() { Content = "4" };
+            ComboBoxItem comboItemB1 = new ComboBoxItem { Content = "2", IsSelected = true };
+            ComboBoxItem comboItemB2 = new ComboBoxItem { Content = "3" };
+            ComboBoxItem comboItemB3 = new ComboBoxItem { Content = "4" };
             MediaDataB.ComboBoxItems.Add(comboItemB1);
             MediaDataB.ComboBoxItems.Add(comboItemB2);
             MediaDataB.ComboBoxItems.Add(comboItemB3);

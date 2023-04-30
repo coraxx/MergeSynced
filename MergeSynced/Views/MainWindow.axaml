@@ -104,7 +104,7 @@
                 <DataTemplate>
                     <Border Padding="4" BorderBrush="DarkGray" BorderThickness="1" Margin="1" Height="30" Background="{Binding TypeBrush}"
                             CornerRadius="{StaticResource ControlCornerRadius}">
-                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Description}" FontSize="12"/>
+                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Description}" FontSize="12" Foreground="Black"/>
                     </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -121,7 +121,7 @@
                 <DataTemplate>
                     <Border Padding="4" BorderBrush="DarkGray" BorderThickness="1" Margin="1" Height="30" Background="{Binding TypeBrush}"
                             CornerRadius="{StaticResource ControlCornerRadius}">
-                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Description}" FontSize="12"/>
+                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding Description}" FontSize="12" Foreground="Black"/>
                     </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -144,11 +144,11 @@
 			<Grid Grid.Column="2" ColumnDefinitions="100,64,90,40,*" RowDefinitions="*,*">
 				<Label Grid.Column="0" Grid.Row="0" Content="Track A for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center"
                        Padding="0" Margin="0" Height="20"/>
-				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="True" SelectionChanged="ComboBoxSelectionChanged"
+				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"
                           VerticalAlignment="Center" Height="20" Width="64" ItemsSource="{Binding MediaDataA.ComboBoxItems}"/>
 				<Label Grid.Column="0" Grid.Row="1" Content="Track B for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center"
                        Padding="0" Margin="0" Height="20"/>
-				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="True" SelectionChanged="ComboBoxSelectionChanged"
+				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"
                           VerticalAlignment="Center" Height="20" Width="64" ItemsSource="{Binding MediaDataB.ComboBoxItems}"/>
 
 				<Label Grid.Column="2" Grid.Row="0" Content="Sample start (s):" Padding="0" Margin="10,0,0,0"
@@ -161,8 +161,8 @@
 				<TextBox x:Name="SampleDuration" Grid.Column="3" Grid.Row="1" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="20"
 				         Margin="5 2" BorderBrush="#454545" Height="20" Width="40" MinWidth="10" Padding="5,0"/>
 
-				<CheckBox x:Name="NormalizeCheckBox" Grid.Row="0" Grid.Column="4" Content="Normalize Audio" IsChecked="True"/>
-				<CheckBox x:Name="UseMkvMergeCheckBox" Grid.Row="1" Grid.Column="4" Content="Use mkvmerge" IsChecked="false"
+				<CheckBox x:Name="NormalizeCheckBox" Grid.Row="0" Grid.Column="4" Content="Normalize Audio" IsChecked="{Binding NormalizeAudio}"/>
+				<CheckBox x:Name="UseMkvMergeCheckBox" Grid.Row="1" Grid.Column="4" Content="Use mkvmerge" IsChecked="{Binding UseMkvmerge}"
                           IsCheckedChanged="UseMkvMergeCheckBox_CheckChange"/>
 			</Grid>
 		</Grid>
@@ -197,12 +197,13 @@
 		<ProgressBar Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding  ProgressPercent}"/>
 
 		<!-- Command buttons -->
-		<Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*,*">
+		<Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*,*,*">
 			<Button x:Name="ProbeButton" Grid.Column="0" Click="Probe_OnClick" Content="Probe" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="AnalyzeButton" Grid.Column="1" Click="Analyze_OnClick" Content="Analyze" IsEnabled="False" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="MergeButton" Grid.Column="2" Click="Merge_OnClick" Content="Merge selected" IsEnabled="False" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="AbortButton" Grid.Column="3" Click="Abort_OnClick" Content="Abort" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button Grid.Column="4" Click="OpenTempFolder_OnClick" Content="Temp folder" Height="36" Width="120" HorizontalAlignment="Center"/>
+			<ComboBox x:Name="ThemeSelect" Grid.Column="5" Height="36" SelectionChanged="ThemeSelect_OnSelectionChanged" Width="120" HorizontalAlignment="Center"/>
 		</Grid>
 
 		<!-- Calculation results for audio sync -->
@@ -220,13 +221,13 @@
 								<!--Alignment line-->
                                 <GeometryDrawing Geometry="F0 M2250,2250z M0,0z M208.333,208.333L208.333,2083.333 208.333,208.333z">
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="166.67" LineCap="Flat" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="166.67" LineCap="Flat" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 								</GeometryDrawing>
 								<!--Frame A-->
 								<GeometryDrawing>
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="125" LineCap="Round" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="125" LineCap="Round" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 									<GeometryDrawing.Geometry>
 										<RectangleGeometry Rect="416.667,416.667,1666.67,625" />
@@ -235,15 +236,15 @@
                                 <!--Frame B-->
 								<GeometryDrawing>
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="125" LineCap="Round" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="125" LineCap="Round" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 									<GeometryDrawing.Geometry>
 										<RectangleGeometry Rect="416.667,1250,1666.67,625" />
 									</GeometryDrawing.Geometry>
 								</GeometryDrawing>
 								<!--Letters A and B-->
-								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
-								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
+								<GeometryDrawing Brush="{DynamicResource ButtonForeground}" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
+								<GeometryDrawing Brush="{DynamicResource ButtonForeground}" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
 							</DrawingGroup>
 						</DrawingImage.Drawing>
 					</DrawingImage>
@@ -258,13 +259,13 @@
                                 <!--Alignment line-->
 								<GeometryDrawing Geometry="F0 M2250,2250z M0,0z M208.333,208.333L208.333,2083.333 208.333,208.333z">
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="166.67" LineCap="Flat" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="166.67" LineCap="Flat" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 								</GeometryDrawing>
                                 <!--Frame A-->
 								<GeometryDrawing>
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="125" LineCap="Round" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="125" LineCap="Round" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 									<GeometryDrawing.Geometry>
 										<RectangleGeometry Rect="416.667,416.667,1666.67,625" />
@@ -273,15 +274,15 @@
                                 <!--Frame B-->
 								<GeometryDrawing>
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="125" LineCap="Round" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="125" LineCap="Round" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 									<GeometryDrawing.Geometry>
 										<RectangleGeometry Rect="833.333,1250,1250,625" />
 									</GeometryDrawing.Geometry>
 								</GeometryDrawing>
                                 <!--Letters A and B-->
-								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
-								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
+								<GeometryDrawing Brush="{DynamicResource ButtonForeground}" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
+								<GeometryDrawing Brush="{DynamicResource ButtonForeground}" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
 							</DrawingGroup>
 						</DrawingImage.Drawing>
 					</DrawingImage>
@@ -295,12 +296,12 @@
 							<DrawingGroup ClipGeometry="M0,0 V2250 H2250 V0 H0 Z">
 								<GeometryDrawing Geometry="F0 M2250,2250z M0,0z M208.333,208.333L208.333,2083.333 208.333,208.333z">
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="166.67" LineCap="Flat" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="166.67" LineCap="Flat" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 								</GeometryDrawing>
 								<GeometryDrawing>
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="125" LineCap="Round" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="125" LineCap="Round" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 									<GeometryDrawing.Geometry>
 										<RectangleGeometry Rect="833.333,416.667,1250,625" />
@@ -308,15 +309,15 @@
 								</GeometryDrawing>
 								<GeometryDrawing>
 									<GeometryDrawing.Pen>
-										<Pen Brush="#FF000000" Thickness="125" LineCap="Round" LineJoin="Round" />
+										<Pen Brush="{DynamicResource ButtonForeground}" Thickness="125" LineCap="Round" LineJoin="Round" />
 									</GeometryDrawing.Pen>
 									<GeometryDrawing.Geometry>
 										<RectangleGeometry Rect="416.667,1250,1666.67,625" />
 									</GeometryDrawing.Geometry>
 								</GeometryDrawing>
                                 <!--Letters A and B-->
-								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
-								<GeometryDrawing Brush="#FF000000" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
+								<GeometryDrawing Brush="{DynamicResource ButtonForeground}" Geometry="F1 M2250,2250z M0,0z M1591.4,937.358L1751.307,520.975 1810.668,520.975 1981.084,937.358 1918.314,937.358 1869.746,811.25 1695.637,811.25 1649.909,937.358 1591.4,937.358z M1711.543,766.374L1852.704,766.374 1809.248,651.059C1795.993,616.03 1786.147,587.248 1779.709,564.715 1774.407,591.414 1766.928,617.923 1757.271,644.243L1711.543,766.374z" />
+								<GeometryDrawing Brush="{DynamicResource ButtonForeground}" Geometry="F1 M2250,2250z M0,0z M1629.03,1770.69L1629.03,1354.308 1785.245,1354.308C1817.056,1354.308 1842.571,1358.521 1861.79,1366.947 1881.009,1375.373 1896.062,1388.344 1906.95,1405.858 1917.838,1423.373 1923.281,1441.693 1923.281,1460.818 1923.281,1478.617 1918.453,1495.374 1908.796,1511.09 1899.139,1526.806 1884.559,1539.493 1865.056,1549.15 1890.24,1556.534 1909.601,1569.126 1923.139,1586.925 1936.678,1604.724 1943.447,1625.742 1943.447,1649.979 1943.447,1669.482 1939.329,1687.613 1931.092,1704.37 1922.855,1721.128 1912.678,1734.051 1900.559,1743.14 1888.441,1752.229 1873.246,1759.093 1854.973,1763.732 1836.701,1768.371 1814.31,1770.69 1787.801,1770.69L1629.03,1770.69z M1684.131,1529.268L1774.168,1529.268C1798.594,1529.268 1816.109,1527.658 1826.713,1524.439 1840.724,1520.274 1851.281,1513.362 1858.381,1503.706 1865.482,1494.049 1869.032,1481.93 1869.032,1467.35 1869.032,1453.528 1865.719,1441.362 1859.092,1430.853 1852.464,1420.344 1842.997,1413.148 1830.689,1409.267 1818.381,1405.385 1797.268,1403.444 1767.351,1403.444L1684.131,1403.444 1684.131,1529.268z M1684.131,1721.554L1787.801,1721.554C1805.6,1721.554 1818.097,1720.891 1825.292,1719.566 1837.979,1717.293 1848.583,1713.506 1857.103,1708.205 1865.624,1702.903 1872.63,1695.187 1878.121,1685.056 1883.612,1674.926 1886.358,1663.234 1886.358,1649.979 1886.358,1634.452 1882.382,1620.961 1874.429,1609.505 1866.476,1598.05 1855.447,1590.002 1841.34,1585.363 1827.233,1580.724 1806.925,1578.404 1780.416,1578.404L1684.131,1578.404 1684.131,1721.554z" />
 							</DrawingGroup>
 						</DrawingImage.Drawing>
 					</DrawingImage>
