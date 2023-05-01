@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:scottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+        xmlns:utilities="clr-namespace:MergeSynced.Utilities"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="720"
         x:Class="MergeSynced.Views.MainWindow"
         x:DataType="vm:MergeSyncedViewModel"
@@ -15,6 +16,10 @@
     <Design.DataContext>
 		<vm:MergeSyncedViewModel/>
     </Design.DataContext>
+
+    <Window.Resources>
+		<utilities:BoolToStatusColorConverter x:Key="BoolToStatusColorConverter"/>
+    </Window.Resources>
 
     <Window.Styles>
 		<Style Selector="CheckBox /template/ Grid#RootGrid">
@@ -194,7 +199,7 @@
 		</Grid>
 
 		<!-- Process bar -->
-		<ProgressBar Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding  ProgressPercent}"/>
+		<ProgressBar Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding ProgressPercent}"/>
 
 		<!-- Command buttons -->
 		<Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*,*,*">
@@ -203,7 +208,7 @@
 			<Button x:Name="MergeButton" Grid.Column="2" Click="Merge_OnClick" Content="Merge selected" IsEnabled="False" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="AbortButton" Grid.Column="3" Click="Abort_OnClick" Content="Abort" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button Grid.Column="4" Click="OpenTempFolder_OnClick" Content="Temp folder" Height="36" Width="120" HorizontalAlignment="Center"/>
-			<ComboBox x:Name="ThemeSelect" Grid.Column="5" Height="36" SelectionChanged="ThemeSelect_OnSelectionChanged" Width="120" HorizontalAlignment="Center"/>
+			<ComboBox x:Name="ThemeSelect" Grid.Column="5" Height="36" ItemsSource="{Binding ThemeVariants}" SelectionChanged="ThemeSelect_OnSelectionChanged" Width="120" HorizontalAlignment="Center"/>
 		</Grid>
 
 		<!-- Calculation results for audio sync -->
@@ -329,11 +334,14 @@
 			<!-- Indicators if required tools were found, i.e. ffmpeg/mkvtoolnix -->
 			<StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
 				<Label x:Name="FfmpegAvailableState" Content="ffmpeg" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
-                       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+                       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0"
+                       Background="{Binding FfmpegAvailable, Converter={StaticResource BoolToStatusColorConverter}}"/>
 				<Label x:Name="FfprobeAvailableState" Content="ffprobe" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
-				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+				       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0"
+                       Background="{Binding FfprobeAvailable, Converter={StaticResource BoolToStatusColorConverter}}"/>
 				<Label x:Name="MkvmergeAvailableState" Content="mkvmerge" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
-                       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0" Background="Red"/>
+                       VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0"
+                       Background="{Binding MkvmergeAvailable, Converter={StaticResource BoolToStatusColorConverter}}"/>
 			</StackPanel>
 		</Grid>
 	</Grid>

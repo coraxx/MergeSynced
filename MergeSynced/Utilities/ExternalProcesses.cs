@@ -9,7 +9,7 @@ using Avalonia.Media;
 using MergeSynced.Controls;
 using Newtonsoft.Json.Linq;
 
-namespace MergeSynced.Tools
+namespace MergeSynced.Utilities
 {
     /// <summary>
     /// Calling external tools ffmpeg and mkvtoolnix to probe and merge input files.

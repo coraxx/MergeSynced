@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Avalonia.Styling;
 using Newtonsoft.Json;
 
-namespace MergeSynced.Tools
+namespace MergeSynced.Utilities
 {
     public class SettingsManager
     {
@@ -46,9 +47,19 @@ namespace MergeSynced.Tools
             }
 
             string json = File.ReadAllText(FilePath);
-            SettingsData settingsData = JsonConvert.DeserializeObject<SettingsData>(json);
+            SettingsData settingsData = new() { UserSettings = UserSettings, ApplicationSettings = ApplicationSettings };
+            try
+            {
+                settingsData = JsonConvert.DeserializeObject<SettingsData>(json);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
+            }
             UserSettings = settingsData.UserSettings;
-            ApplicationSettings = settingsData.ApplicationSettings;
+            // Reset application settings on new version
+            if (settingsData.ApplicationSettings.Version == ApplicationSettings.Version)
+                ApplicationSettings = settingsData.ApplicationSettings;
             OnSettingsLoaded();
             return true;
         }
@@ -68,6 +79,7 @@ namespace MergeSynced.Tools
 
     public class ApplicationData
     {
+        public string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "UNKNOWN";
         public bool WriteLog = true;
         public bool ShowNotifications = true;
     }

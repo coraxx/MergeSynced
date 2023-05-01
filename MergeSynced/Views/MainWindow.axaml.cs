@@ -19,7 +19,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using MergeSynced.Audio;
 using MergeSynced.Controls;
-using MergeSynced.Tools;
+using MergeSynced.Utilities;
 using MergeSynced.ViewModels;
 using ScottPlot.Control;
 using ScottPlot.Plottables;
@@ -29,40 +29,27 @@ namespace MergeSynced.Views
     public partial class MainWindow : Window
     {
         #region Fields and properties
-
+        
         public MergeSyncedViewModel MainViewModel = new MergeSyncedViewModel();
-
-        private const bool UseNotifications = true;
+        
         private WindowNotificationManager? _notificationManager;
-
-        private Stopwatch _sw = Stopwatch.StartNew();
-
+        
         private readonly ExternalProcesses _ep = new ExternalProcesses();
 
+        // Parse time from external tools' output
         private readonly Regex _reTime = new Regex(@"time=\s*([0-9\.:]*)", RegexOptions.IgnoreCase);
         private Match _timeMatchFfmpegProg = null!;
         private TimeSpan _currentTimeFfmpegProg;
 
+        // Directories for application data
         private readonly string _settingsDir;
         private readonly string _workingDir;
 
         private const int ProbeLengthInSeconds = 20;
 
-        private readonly bool _ffmpegExisting;
-        private readonly bool _ffprobeExisting;
-        private readonly bool _mkvmergeExisting;
-
+        // Debugging
         private readonly StringTraceListener _trace;
-
-        private void TraceOnPropertyChanged(object? sender, PropertyChangedEventArgs? e)
-        {
-            if (e?.PropertyName == "Trace")
-            {
-                Dispatcher.UIThread.InvokeAsync(() => {
-                    ExternalProcessOutputTextBox.Text = $"{ExternalProcessOutputTextBox.Text}\n{_trace.TraceLastEntry}";
-                });
-            }
-        }
+        private Stopwatch _sw = new Stopwatch();
 
         #endregion
 
@@ -82,7 +69,7 @@ namespace MergeSynced.Views
             _workingDir = CreateTempDir();
 
             // Add event handler in order to expose logs
-            _trace = new StringTraceListener(true, Path.Combine(_workingDir, "log.txt"));
+            _trace = new StringTraceListener();
             _trace.PropertyChanged += TraceOnPropertyChanged;
             Trace.Listeners.Add(_trace);
             Trace.AutoFlush = true;
@@ -94,73 +81,78 @@ namespace MergeSynced.Views
             FilePathB.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
             FilePathOut.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
 
-            ThemeSelect.ItemsSource = new[]
-            {
-                ThemeVariant.Default,
-                ThemeVariant.Dark,
-                ThemeVariant.Light
-            };
-            ThemeSelect.SelectedIndex = 0;
-
-            // Setup plots
+            // Initial plot setup...
             SetWpfPlotStatic(WpfPlotAudioWaves);
             SetWpfPlotStatic(WpfPlotCrossCorrelation);
+
+            // ...and subscribe to theme change event
+            if (Application.Current != null)
+                Application.Current.ActualThemeVariantChanged += (sender, args) =>
+                {
+                    if (Application.Current.ActualThemeVariant.Key.ToString() == "Dark")
+                    {
+                        WpfPlotAudioWaves.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"),
+                            ScottPlot.Color.FromHex("#232323"));
+                        WpfPlotCrossCorrelation.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"),
+                            ScottPlot.Color.FromHex("#232323"));
+                    }
+                    else
+                    {
+                        WpfPlotAudioWaves.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"),
+                            ScottPlot.Color.FromHex("#FFFFFFFF"));
+                        WpfPlotCrossCorrelation.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"),
+                            ScottPlot.Color.FromHex("#FFFFFFFF"));
+                    }
+                };
 
             // Check if ffmpeg and mkvmerge is available
             if (OperatingSystem.IsWindows())
             {
-                _ffmpegExisting = SearchBinaryInPath("ffmpeg.exe");
-                _ffprobeExisting = SearchBinaryInPath("ffprobe.exe");
-                _mkvmergeExisting = SearchBinaryInPath("mkvmerge.exe");
+                MainViewModel.FfmpegAvailable = SearchBinaryInPath("ffmpeg.exe");
+                MainViewModel.FfprobeAvailable = SearchBinaryInPath("ffprobe.exe");
+                MainViewModel.MkvmergeAvailable = SearchBinaryInPath("mkvmerge.exe");
             }
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                _ffmpegExisting = SearchBinaryInPath("ffmpeg");
-                _ffprobeExisting = SearchBinaryInPath("ffprobe");
-                _mkvmergeExisting = SearchBinaryInPath("mkvmerge");
+                MainViewModel.FfmpegAvailable = SearchBinaryInPath("ffmpeg");
+                MainViewModel.FfprobeAvailable = SearchBinaryInPath("ffprobe");
+                MainViewModel.MkvmergeAvailable = SearchBinaryInPath("mkvmerge");
             }
 
-
-            if (_ffmpegExisting)
+            if (MainViewModel.MkvmergeAvailable)
             {
-                FfmpegAvailableState.Background = new SolidColorBrush(Colors.LimeGreen);
-            }
-            if (_ffprobeExisting)
-            {
-                FfprobeAvailableState.Background = new SolidColorBrush(Colors.LimeGreen);
-            }
-            if (_mkvmergeExisting)
-            {
-                MkvmergeAvailableState.Background = new SolidColorBrush(Colors.LimeGreen);
-                MainViewModel.UseMkvmerge = !_ffmpegExisting && !_ffprobeExisting;
+                MainViewModel.UseMkvmerge = MainViewModel is { FfmpegAvailable: false, FfprobeAvailable: false };
                 ProbeButton.ClearValue(BackgroundProperty);
             }
 
-            if (!_ffmpegExisting && !_ffprobeExisting && !_mkvmergeExisting) SwitchButtonState(ProbeButton, false, "No ffmpeg in PATH", true);
+            if (MainViewModel is { FfmpegAvailable: false, FfprobeAvailable: false, MkvmergeAvailable: false }) SwitchButtonState(ProbeButton, false, "No ffmpeg in PATH", true);
         }
 
         private void Window_OnLoaded(object? sender, RoutedEventArgs e)
         {
-            if (UseNotifications)
+            // Load settings when window is loaded so all OnPropertyChanged events are evaluated properly
+            SettingsManager.FilePath = Path.Combine(_settingsDir, "MergeSynced_Settings.json");
+            SettingsManager.Load();
+
+            // Add event handler in order to expose logs
+            if (SettingsManager.ApplicationSettings.WriteLog)
+                _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
+
+            // Set theme
+            ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;
+
+            if (Application.Current != null && Application.Current.RequestedThemeVariant != SettingsManager.UserSettings.SelectedTheme)
+            {
+                Application.Current.RequestedThemeVariant = SettingsManager.UserSettings.SelectedTheme;
+            }
+
+            if (SettingsManager.ApplicationSettings.ShowNotifications)
             {
                 _notificationManager = new WindowNotificationManager(this)
                 {
                     Position = NotificationPosition.TopRight,
                     MaxItems = 5
                 };
-            }
-            // Load settings
-            SettingsManager.FilePath = Path.Combine(_settingsDir, "MergeSynced_Settings.json");
-            SettingsManager.Load();
-            ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;
-
-            if (Application.Current != null && Application.Current.RequestedThemeVariant != SettingsManager.UserSettings.SelectedTheme)
-            {
-                Application.Current.RequestedThemeVariant = SettingsManager.UserSettings.SelectedTheme;
-
-                // Update plot theme
-                SetWpfPlotStatic(WpfPlotAudioWaves);
-                SetWpfPlotStatic(WpfPlotCrossCorrelation);
             }
         }
 
@@ -169,9 +161,10 @@ namespace MergeSynced.Views
             // Save settings
             SettingsManager.Save();
             // Close log file
+            Trace.Listeners.Remove(_trace);
             _trace.Logfile?.Close();
             // Clean up temp dir
-            if (!string.IsNullOrEmpty(_workingDir)) Directory.Delete(_workingDir, true);
+            if (!string.IsNullOrEmpty(_workingDir) && Path.Exists(_workingDir)) Directory.Delete(_workingDir, true);
         }
 
         #endregion
@@ -184,6 +177,7 @@ namespace MergeSynced.Views
             wpfPlot.Plot.YAxes.ForEach(x => x.IsVisible = false);
             wpfPlot.Plot.Grids.Clear();
 
+            // Initialize with current Theme...
             if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"), ScottPlot.Color.FromHex("#232323"));
             else wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"), ScottPlot.Color.FromHex("#FFFFFFFF"));
 
@@ -274,13 +268,13 @@ namespace MergeSynced.Views
                 return;
             }
 
-            if (!_ffprobeExisting && !MainViewModel.UseMkvmerge)
+            if (!MainViewModel.FfprobeAvailable && !MainViewModel.UseMkvmerge)
             {
                 SwitchButtonState(ProbeButton, false, "No ffprobe in PATH", true);
                 return;
             }
 
-            if (!_mkvmergeExisting && MainViewModel.UseMkvmerge)
+            if (!MainViewModel.MkvmergeAvailable && MainViewModel.UseMkvmerge)
             {
                 SwitchButtonState(ProbeButton, false, "No mkvmerge in PATH", true);
                 return;
@@ -405,7 +399,7 @@ namespace MergeSynced.Views
                 return;
             }
 
-            if (!_ffmpegExisting)
+            if (!MainViewModel.FfmpegAvailable)
             {
                 SwitchButtonState(AnalyzeButton, false, "No ffmpeg in PATH", true);
                 return;
@@ -457,6 +451,7 @@ namespace MergeSynced.Views
             if (!durationResult) sampleDurationSeconds = ProbeLengthInSeconds;
             int.TryParse(SampleStart.Text, out int startTime);
 
+            _sw.Restart();
             // Down mix to mono and shorten files
             string args;
 
@@ -671,13 +666,13 @@ namespace MergeSynced.Views
                 return;
             }
 
-            if (!_ffmpegExisting)
+            if (!MainViewModel.FfmpegAvailable)
             {
                 SwitchButtonState(MergeButton, false, "No ffmpeg in PATH", true);
                 return;
             }
 
-            if (!_mkvmergeExisting && MainViewModel.UseMkvmerge)
+            if (MainViewModel is { MkvmergeAvailable: false, UseMkvmerge: true })
             {
                 SwitchButtonState(MergeButton, false, "No mkvmerge in PATH", true);
                 return;
@@ -1062,6 +1057,17 @@ namespace MergeSynced.Views
             }
         }
 
+        private void TraceOnPropertyChanged(object? sender, PropertyChangedEventArgs? e)
+        {
+            if (e?.PropertyName == "Trace")
+            {
+                Dispatcher.UIThread.InvokeAsync(() => {
+                    ExternalProcessOutputTextBox.Text = $"{ExternalProcessOutputTextBox.Text}\n{_trace.TraceLastEntry}";
+                    ExternalProcessOutputTextBox.CaretIndex = ExternalProcessOutputTextBox.Text.Length;
+                });
+            }
+        }
+
         #endregion
 
         #region UI helper functions
@@ -1084,12 +1090,12 @@ namespace MergeSynced.Views
             Dispatcher.UIThread.InvokeAsync(() => {
                 btn.IsEnabled = !blocked;
                 NormalizeCheckBox.IsEnabled = !blocked;
-                UseMkvMergeCheckBox.IsEnabled = !blocked && _mkvmergeExisting;
+                UseMkvMergeCheckBox.IsEnabled = !blocked && MainViewModel.MkvmergeAvailable;
                 SwitchPathsButton.IsEnabled = !blocked;
                 //FilePathA.Allow = !blocked;
                 //FilePathB.AllowDrop = !blocked;
                 ProbeButton.IsEnabled = !blocked &&
-                                        (MainViewModel.UseMkvmerge && _mkvmergeExisting || _ffprobeExisting && !MainViewModel.UseMkvmerge);
+                                        MainViewModel is { UseMkvmerge: true, MkvmergeAvailable: true } or { FfprobeAvailable: true, UseMkvmerge: false };
                 SelectTrackA.IsEnabled = !blocked && MainViewModel.MediaDataA!.ComboBoxItems.Count > 0;
                 SelectTrackB.IsEnabled = !blocked && MainViewModel.MediaDataB!.ComboBoxItems.Count > 0;
             });
@@ -1204,7 +1210,7 @@ namespace MergeSynced.Views
                 ProbeButton.Background = new SolidColorBrush(Colors.DarkOrange);
                 if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") ProbeButton.Foreground = Brushes.Black;
             }
-            ProbeButton.IsEnabled = MainViewModel.UseMkvmerge && _mkvmergeExisting || _ffprobeExisting && !MainViewModel.UseMkvmerge;
+            ProbeButton.IsEnabled = MainViewModel is { UseMkvmerge: true, MkvmergeAvailable: true } or { FfprobeAvailable: true, UseMkvmerge: false };
         }
 
         private void SwitchInputs_OnClick(object sender, RoutedEventArgs e)

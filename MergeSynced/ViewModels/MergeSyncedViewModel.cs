@@ -2,7 +2,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Styling;
 using MergeSynced.Controls;
+using MergeSynced.Utilities;
 
 namespace MergeSynced.ViewModels
 {
@@ -11,6 +13,42 @@ namespace MergeSynced.ViewModels
         #region Fields and properties
 
         #region Configuration
+
+        private bool _ffmpegAvailable;
+        public bool FfmpegAvailable
+        {
+            get => _ffmpegAvailable;
+            set
+            {
+                if (value == _ffmpegAvailable) return;
+                _ffmpegAvailable = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool _ffprobeAvailable;
+        public bool FfprobeAvailable
+        {
+            get => _ffprobeAvailable;
+            set
+            {
+                if (value == _ffprobeAvailable) return;
+                _ffprobeAvailable = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool _mkvmergeAvailable;
+        public bool MkvmergeAvailable
+        {
+            get => _mkvmergeAvailable;
+            set
+            {
+                if (value == _mkvmergeAvailable) return;
+                _mkvmergeAvailable = value;
+                OnPropertyChanged();
+            }
+        }
 
         private bool _normalizeAudio = true;
         public bool NormalizeAudio
@@ -21,7 +59,7 @@ namespace MergeSynced.ViewModels
                 if (value == _normalizeAudio) return;
                 _normalizeAudio = value;
                 OnPropertyChanged();
-                Tools.SettingsManager.UserSettings.NormalizeAudio = value;
+                SettingsManager.UserSettings.NormalizeAudio = value;
             }
         }
 
@@ -34,7 +72,7 @@ namespace MergeSynced.ViewModels
                 if (value == _useMkvmerge) return;
                 _useMkvmerge = value;
                 OnPropertyChanged();
-                Tools.SettingsManager.UserSettings.UseMkvmerge = value;
+                SettingsManager.UserSettings.UseMkvmerge = value;
             }
         }
 
@@ -45,6 +83,13 @@ namespace MergeSynced.ViewModels
         public MediaData? MediaDataA { get; } = new MediaData { IsMainMedia = true };
 
         public MediaData? MediaDataB { get; } = new MediaData { IsMainMedia = false };
+
+        public ThemeVariant[] ThemeVariants { get; } = new[]
+        {
+            ThemeVariant.Default,
+            ThemeVariant.Dark,
+            ThemeVariant.Light
+        };
 
         #endregion
 
@@ -159,7 +204,8 @@ namespace MergeSynced.ViewModels
             }
         }
 
-        private SolidColorBrush _corrPercentColor = SolidColorBrush.Parse("#FF000000");
+        private SolidColorBrush _corrPercentColor = new(Colors.Black);
+
         public SolidColorBrush CorrPercentColor
         {
             get => _corrPercentColor;
@@ -176,12 +222,24 @@ namespace MergeSynced.ViewModels
 
         public MergeSyncedViewModel()
         {
-            if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") CorrPercentColor = SolidColorBrush.Parse("#FFFFFFFF");
+            // Initialize with current Theme...
+            CorrPercentColor = SolidColorBrush.Parse(Application.Current?.ActualThemeVariant.Key.ToString() == "Dark" 
+                ? "#FFFFFFFF" 
+                : "#FF000000");
+            // ...and subscribe to theme change event
+            if (Application.Current != null)
+                Application.Current.ActualThemeVariantChanged += (sender, args) =>
+                {
+                    CorrPercentColor =
+                        SolidColorBrush.Parse(Application.Current.ActualThemeVariant.Key.ToString() == "Dark"
+                            ? "#FFFFFFFF"
+                            : "#FF000000");
+                };
 
             // Load settings
-            Tools.SettingsManager.SettingsLoaded += (sender, args) => {
-                NormalizeAudio = Tools.SettingsManager.UserSettings.NormalizeAudio;
-                UseMkvmerge = Tools.SettingsManager.UserSettings.UseMkvmerge;
+            SettingsManager.SettingsLoaded += (sender, args) => {
+                NormalizeAudio = SettingsManager.UserSettings.NormalizeAudio;
+                UseMkvmerge = SettingsManager.UserSettings.UseMkvmerge;
             };
 
             // Design time dummy items

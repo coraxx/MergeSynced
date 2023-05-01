@@ -5,7 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace MergeSynced.Tools;
+namespace MergeSynced.Utilities;
 
 public class StringTraceListener : TraceListener, INotifyPropertyChanged
 {
@@ -13,16 +13,18 @@ public class StringTraceListener : TraceListener, INotifyPropertyChanged
     private string _lastEntry;
     public StreamWriter? Logfile;
 
-    public StringTraceListener(bool debug = false, string logpath = @"log.txt")
+    public StringTraceListener()
     {
         _builder = new StringBuilder();
         _lastEntry = "";
+    }
 
-        if (debug)
-        {
-            Logfile = File.CreateText(logpath);
-            Logfile.AutoFlush = true;
-        }
+    public void GenerateLogfile(string logPath = @"log.txt")
+    {
+        Logfile?.Close();
+        Logfile = File.CreateText(logPath);
+        Logfile.AutoFlush = true;
+        Logfile?.Write(_builder.ToString());
     }
 
     public string Trace => _builder.ToString();
@@ -35,7 +37,7 @@ public class StringTraceListener : TraceListener, INotifyPropertyChanged
             if (_builder.Length > 100000) _builder.Clear(); // Some simple cleanup
             _builder.Append(message);
             _lastEntry = message ?? "";
-            Logfile?.Write(message);
+            if (Logfile != null && Logfile.BaseStream.CanWrite) Logfile?.Write(message);
             OnPropertyChanged(new PropertyChangedEventArgs("Trace"));
         }
     }
