@@ -135,10 +135,11 @@ namespace MergeSynced.Views
             SettingsManager.Load();
 
             // Add event handler in order to expose logs
-            if (SettingsManager.ApplicationSettings.WriteLog)
+            if (SettingsManager.UserSettings.WriteLog)
                 _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
 
             // Set theme
+            ThemeSelect.ItemsSource = MainViewModel.ThemeVariants;  // Needed, otherwise change does not apply correctly ?!
             ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;
 
             if (Application.Current != null && Application.Current.RequestedThemeVariant != SettingsManager.UserSettings.SelectedTheme)
@@ -146,7 +147,7 @@ namespace MergeSynced.Views
                 Application.Current.RequestedThemeVariant = SettingsManager.UserSettings.SelectedTheme;
             }
 
-            if (SettingsManager.ApplicationSettings.ShowNotifications)
+            if (SettingsManager.UserSettings.ShowNotifications)
             {
                 _notificationManager = new WindowNotificationManager(this)
                 {
@@ -1242,5 +1243,23 @@ namespace MergeSynced.Views
 
         #endregion
 
+        private void ShowNotificationSetting_OnIsCheckedChanged(object? sender, RoutedEventArgs e)
+        {
+            if (MainViewModel.ShowNotifications && _notificationManager == null)
+            {
+                _notificationManager = new WindowNotificationManager(this)
+                {
+                    Position = NotificationPosition.TopRight,
+                    MaxItems = 5
+                };
+            } else if (!MainViewModel.ShowNotifications) _notificationManager = null;
+        }
+
+        private void WriteLogSetting_OnIsCheckedChanged(object? sender, RoutedEventArgs e)
+        {
+            if (MainViewModel.WriteLog)
+                _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
+            else _trace.StopLogfile();
+        }
     }
 }

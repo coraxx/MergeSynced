@@ -45,6 +45,7 @@
     <PackageReference Include="Dotnet.Bundle" Version="0.9.13" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="6.6.0-preview6" />
   </ItemGroup>
 
 

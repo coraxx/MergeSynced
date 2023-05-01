@@ -75,13 +75,13 @@ namespace MergeSynced.Utilities
         public bool NormalizeAudio = true;
         public bool UseMkvmerge = false;
         public ThemeVariant SelectedTheme = ThemeVariant.Default;
+        public bool WriteLog = true;
+        public bool ShowNotifications = true;
     }
 
     public class ApplicationData
     {
         public string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "UNKNOWN";
-        public bool WriteLog = true;
-        public bool ShowNotifications = true;
     }
 
     public struct SettingsData

@@ -1,5 +1,7 @@
 ﻿using Avalonia;
 using System;
+using Projektanker.Icons.Avalonia;
+using Projektanker.Icons.Avalonia.FontAwesome;
 
 namespace MergeSynced
 {
@@ -16,6 +18,8 @@ namespace MergeSynced
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .LogToTrace();
+                .LogToTrace()
+                .WithIcons(container => container
+                    .Register<FontAwesomeIconProvider>());
     }
 }

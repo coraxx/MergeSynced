@@ -76,6 +76,32 @@ namespace MergeSynced.ViewModels
             }
         }
 
+        private bool _showNotifications;
+        public bool ShowNotifications
+        {
+            get => _showNotifications;
+            set
+            {
+                if (value == _showNotifications) return;
+                _showNotifications = value;
+                OnPropertyChanged();
+                SettingsManager.UserSettings.ShowNotifications = value;
+            }
+        }
+
+        private bool _writeLog;
+        public bool WriteLog
+        {
+            get => _writeLog;
+            set
+            {
+                if (value == _writeLog) return;
+                _writeLog = value;
+                OnPropertyChanged();
+                SettingsManager.UserSettings.WriteLog = value;
+            }
+        }
+
         #endregion
 
         #region Items
@@ -240,6 +266,8 @@ namespace MergeSynced.ViewModels
             SettingsManager.SettingsLoaded += (sender, args) => {
                 NormalizeAudio = SettingsManager.UserSettings.NormalizeAudio;
                 UseMkvmerge = SettingsManager.UserSettings.UseMkvmerge;
+                ShowNotifications = SettingsManager.UserSettings.ShowNotifications;
+                WriteLog = SettingsManager.UserSettings.WriteLog;
             };
 
             // Design time dummy items

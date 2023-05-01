@@ -21,10 +21,17 @@ public class StringTraceListener : TraceListener, INotifyPropertyChanged
 
     public void GenerateLogfile(string logPath = @"log.txt")
     {
+        if (Logfile != null && ((FileStream)(Logfile.BaseStream)).Name == logPath) return;
         Logfile?.Close();
         Logfile = File.CreateText(logPath);
         Logfile.AutoFlush = true;
         Logfile?.Write(_builder.ToString());
+    }
+
+    public void StopLogfile()
+    {
+        Logfile?.Close();
+        Logfile = null;
     }
 
     public string Trace => _builder.ToString();

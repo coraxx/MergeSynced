@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:scottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
         xmlns:utilities="clr-namespace:MergeSynced.Utilities"
+        xmlns:i="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="720"
         x:Class="MergeSynced.Views.MainWindow"
         x:DataType="vm:MergeSyncedViewModel"
@@ -202,17 +203,16 @@
 		<ProgressBar Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Value="{Binding ProgressPercent}"/>
 
 		<!-- Command buttons -->
-		<Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*,*,*">
+		<Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*,*">
 			<Button x:Name="ProbeButton" Grid.Column="0" Click="Probe_OnClick" Content="Probe" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="AnalyzeButton" Grid.Column="1" Click="Analyze_OnClick" Content="Analyze" IsEnabled="False" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="MergeButton" Grid.Column="2" Click="Merge_OnClick" Content="Merge selected" IsEnabled="False" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button x:Name="AbortButton" Grid.Column="3" Click="Abort_OnClick" Content="Abort" Height="36" Width="120" HorizontalAlignment="Center"/>
 			<Button Grid.Column="4" Click="OpenTempFolder_OnClick" Content="Temp folder" Height="36" Width="120" HorizontalAlignment="Center"/>
-			<ComboBox x:Name="ThemeSelect" Grid.Column="5" Height="36" ItemsSource="{Binding ThemeVariants}" SelectionChanged="ThemeSelect_OnSelectionChanged" Width="120" HorizontalAlignment="Center"/>
 		</Grid>
 
 		<!-- Calculation results for audio sync -->
-		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="160,200,*,60">
+		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="160,200,*,60,60">
 
             <Label Grid.Column="0" Content="Calculated _delay:" FontSize="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
 			<Label x:Name="CalcDelayLabel" Grid.Column="1" FontSize="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
@@ -331,8 +331,24 @@
 
 			<Label x:Name="StatusLabel" Grid.Column="2" FontSize="18" Margin="10,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="Red"/>
 
+
+            <Button Grid.Column="3" i:Attached.Icon="fa-solid fa-sliders" Padding="6,0">
+				<Button.Flyout>
+					<Flyout Placement="Top">
+						<StackPanel Spacing="4">
+							<CheckBox Content="Write log file" IsChecked="{Binding WriteLog}" IsCheckedChanged="ShowNotificationSetting_OnIsCheckedChanged"/>
+							<CheckBox Content="Show notifications" IsChecked="{Binding ShowNotifications}" IsCheckedChanged="WriteLogSetting_OnIsCheckedChanged"/>
+							<StackPanel Orientation="Horizontal" Spacing="4">
+								<Label Content="Theme:" VerticalAlignment="Center"/>
+								<ComboBox x:Name="ThemeSelect" ItemsSource="{Binding ThemeVariants}" SelectionChanged="ThemeSelect_OnSelectionChanged"
+                                          HorizontalAlignment="Center" Height="26" Width="76"/>
+							</StackPanel>
+						</StackPanel>
+					</Flyout>
+				</Button.Flyout>
+            </Button>
 			<!-- Indicators if required tools were found, i.e. ffmpeg/mkvtoolnix -->
-			<StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+			<StackPanel Grid.Column="4" Spacing="2" VerticalAlignment="Center">
 				<Label x:Name="FfmpegAvailableState" Content="ffmpeg" FontSize="8" VerticalAlignment="Center" CornerRadius="{StaticResource ControlCornerRadius}"
                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="0" Margin="1 0 5 0"
                        Background="{Binding FfmpegAvailable, Converter={StaticResource BoolToStatusColorConverter}}"/>
