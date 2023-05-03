@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -81,11 +83,6 @@ namespace MergeSynced.Views
             FilePathB.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
             FilePathOut.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
 
-            // Bindings for settings from CodeBehind to avoid trigger on open/close of fly out
-            ThemeSelect.ItemsSource = MainViewModel.ThemeVariants;
-            SettingWriteLog.IsChecked = MainViewModel.WriteLog;
-            SettingShowNotification.IsChecked = MainViewModel.ShowNotifications;
-
             // Initial plot setup...
             SetWpfPlotStatic(WpfPlotAudioWaves);
             SetWpfPlotStatic(WpfPlotCrossCorrelation);
@@ -94,20 +91,8 @@ namespace MergeSynced.Views
             if (Application.Current != null)
                 Application.Current.ActualThemeVariantChanged += (sender, args) =>
                 {
-                    if (Application.Current.ActualThemeVariant.Key.ToString() == "Dark")
-                    {
-                        WpfPlotAudioWaves.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"),
-                            ScottPlot.Color.FromHex("#232323"));
-                        WpfPlotCrossCorrelation.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"),
-                            ScottPlot.Color.FromHex("#232323"));
-                    }
-                    else
-                    {
-                        WpfPlotAudioWaves.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"),
-                            ScottPlot.Color.FromHex("#FFFFFFFF"));
-                        WpfPlotCrossCorrelation.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"),
-                            ScottPlot.Color.FromHex("#FFFFFFFF"));
-                    }
+                    SetWpfPlotStatic(WpfPlotAudioWaves);
+                    SetWpfPlotStatic(WpfPlotCrossCorrelation);
                 };
 
             // Check if ffmpeg and mkvmerge is available
@@ -143,8 +128,29 @@ namespace MergeSynced.Views
             if (SettingsManager.UserSettings.WriteLog)
                 _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
 
-            // Set theme
+            // Write back loaded setting states before binding to control for correct initial state
+            MainViewModel.WriteLog = SettingsManager.UserSettings.WriteLog;
+            MainViewModel.ShowNotifications = SettingsManager.UserSettings.ShowNotifications;
+
+            // Bindings for settings from CodeBehind to avoid trigger on open/close of fly out
+            ThemeSelect.Bind(ItemsControl.ItemsSourceProperty, new Binding
+            {
+                Source = MainViewModel,
+                Path = nameof(MainViewModel.ThemeVariants)
+            });
             ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;  // -> property changed triggers SetSelectedTheme()
+
+            SettingWriteLog.Bind(ToggleButton.IsCheckedProperty, new Binding
+            {
+                Source = MainViewModel,
+                Path = nameof(MainViewModel.WriteLog)
+            });
+
+            SettingShowNotification.Bind(ToggleButton.IsCheckedProperty, new Binding
+            {
+                Source = MainViewModel,
+                Path = nameof(MainViewModel.ShowNotifications)
+            });
 
             if (SettingsManager.UserSettings.ShowNotifications)
             {
@@ -178,7 +184,7 @@ namespace MergeSynced.Views
             wpfPlot.Plot.Grids.Clear();
 
             // Initialize with current Theme...
-            if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"), ScottPlot.Color.FromHex("#232323"));
+            if (Application.Current?.ActualThemeVariant == ThemeVariant.Dark) wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"), ScottPlot.Color.FromHex("#232323"));
             else wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"), ScottPlot.Color.FromHex("#FFFFFFFF"));
 
             //wpfPlot.Configuration.LeftClickDragPan = false;
@@ -1272,5 +1278,6 @@ namespace MergeSynced.Views
         }
 
         #endregion
+
     }
 }

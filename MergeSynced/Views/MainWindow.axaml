@@ -341,7 +341,7 @@
                                 <ComboBox x:Name="ThemeSelect" SelectionChanged="ThemeSelect_OnSelectionChanged"
                                           HorizontalAlignment="Center" Height="26" Width="76"/>
                             </StackPanel>
-							<CheckBox x:Name="SettingWriteLog" Content="Write log file" IsCheckedChanged="WriteLogSetting_OnIsCheckedChanged"/>
+							<CheckBox x:Name="SettingWriteLog" Content="Write log file in temp" IsCheckedChanged="WriteLogSetting_OnIsCheckedChanged"/>
 							<CheckBox x:Name="SettingShowNotification" Content="Show notifications" IsCheckedChanged="ShowNotificationSetting_OnIsCheckedChanged"/>
 						</StackPanel>
 					</Flyout>
