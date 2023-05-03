@@ -76,7 +76,7 @@ namespace MergeSynced.ViewModels
             }
         }
 
-        private bool _showNotifications;
+        private bool _showNotifications = true;
         public bool ShowNotifications
         {
             get => _showNotifications;
@@ -89,7 +89,7 @@ namespace MergeSynced.ViewModels
             }
         }
 
-        private bool _writeLog;
+        private bool _writeLog = true;
         public bool WriteLog
         {
             get => _writeLog;

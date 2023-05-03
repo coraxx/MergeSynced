@@ -81,6 +81,11 @@ namespace MergeSynced.Views
             FilePathB.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
             FilePathOut.AddHandler(DragDrop.DropEvent, File_Drop!, RoutingStrategies.Bubble);
 
+            // Bindings for settings from CodeBehind to avoid trigger on open/close of fly out
+            ThemeSelect.ItemsSource = MainViewModel.ThemeVariants;
+            SettingWriteLog.IsChecked = MainViewModel.WriteLog;
+            SettingShowNotification.IsChecked = MainViewModel.ShowNotifications;
+
             // Initial plot setup...
             SetWpfPlotStatic(WpfPlotAudioWaves);
             SetWpfPlotStatic(WpfPlotCrossCorrelation);
@@ -139,13 +144,7 @@ namespace MergeSynced.Views
                 _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
 
             // Set theme
-            ThemeSelect.ItemsSource = MainViewModel.ThemeVariants;  // Needed, otherwise change does not apply correctly ?!
-            ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;
-
-            if (Application.Current != null && Application.Current.RequestedThemeVariant != SettingsManager.UserSettings.SelectedTheme)
-            {
-                Application.Current.RequestedThemeVariant = SettingsManager.UserSettings.SelectedTheme;
-            }
+            ThemeSelect.SelectedItem = SettingsManager.UserSettings.SelectedTheme;  // -> property changed triggers SetSelectedTheme()
 
             if (SettingsManager.UserSettings.ShowNotifications)
             {
@@ -248,18 +247,6 @@ namespace MergeSynced.Views
         #endregion
 
         #region Controls logic
-
-        private void ThemeSelect_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-        {
-            if (Application.Current == null || ThemeSelect.SelectedItem == null) return;
-            
-            Application.Current.RequestedThemeVariant = (ThemeVariant)ThemeSelect.SelectedItem;
-            SettingsManager.UserSettings.SelectedTheme = Application.Current.RequestedThemeVariant;
-
-            // Update plot theme
-            SetWpfPlotStatic(WpfPlotAudioWaves);
-            SetWpfPlotStatic(WpfPlotCrossCorrelation);
-        }
 
         private async void Probe_OnClick(object sender, RoutedEventArgs e)
         {
@@ -1235,7 +1222,7 @@ namespace MergeSynced.Views
             e.Handled = !uint.TryParse(str, out _);
         }
 
-        private void ComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SelectTrack_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             AnalyzeButton.Background = new SolidColorBrush(Colors.DarkOrange);
             if (Application.Current?.ActualThemeVariant.Key.ToString() == "Dark") AnalyzeButton.Foreground = Brushes.Black;
@@ -1243,23 +1230,47 @@ namespace MergeSynced.Views
 
         #endregion
 
+        #region Settings changed
+
+        private void ThemeSelect_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (sender is not ComboBox cb || ThemeSelect.SelectedItem == null) return;
+
+            SettingsManager.UserSettings.SelectedTheme = (ThemeVariant)ThemeSelect.SelectedItem;
+            SetSelectedTheme();
+        }
+
         private void ShowNotificationSetting_OnIsCheckedChanged(object? sender, RoutedEventArgs e)
         {
-            if (MainViewModel.ShowNotifications && _notificationManager == null)
+            if (sender is not CheckBox cb || cb.IsChecked == null) return;
+            if ((bool)cb.IsChecked && _notificationManager == null)
             {
                 _notificationManager = new WindowNotificationManager(this)
                 {
                     Position = NotificationPosition.TopRight,
                     MaxItems = 5
                 };
-            } else if (!MainViewModel.ShowNotifications) _notificationManager = null;
+            } else _notificationManager = null;
         }
 
         private void WriteLogSetting_OnIsCheckedChanged(object? sender, RoutedEventArgs e)
         {
-            if (MainViewModel.WriteLog)
+            if (sender is not CheckBox cb || cb.IsChecked == null) return;
+            if ((bool)cb.IsChecked)
                 _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
             else _trace.StopLogfile();
         }
+
+        private void SetSelectedTheme()
+        {
+            if (Application.Current == null ||
+                Application.Current.RequestedThemeVariant == SettingsManager.UserSettings.SelectedTheme) return;
+            Application.Current.RequestedThemeVariant = SettingsManager.UserSettings.SelectedTheme;
+            // Update plot theme
+            SetWpfPlotStatic(WpfPlotAudioWaves);
+            SetWpfPlotStatic(WpfPlotCrossCorrelation);
+        }
+
+        #endregion
     }
 }

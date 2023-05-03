@@ -150,11 +150,11 @@
 			<Grid Grid.Column="2" ColumnDefinitions="100,64,90,40,*" RowDefinitions="*,*">
 				<Label Grid.Column="0" Grid.Row="0" Content="Track A for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center"
                        Padding="0" Margin="0" Height="20"/>
-				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"
+				<ComboBox x:Name="SelectTrackA" Grid.Row="0" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="SelectTrack_OnSelectionChanged"
                           VerticalAlignment="Center" Height="20" Width="64" ItemsSource="{Binding MediaDataA.ComboBoxItems}"/>
 				<Label Grid.Column="0" Grid.Row="1" Content="Track B for analysis:" VerticalAlignment="Center" VerticalContentAlignment="Center"
                        Padding="0" Margin="0" Height="20"/>
-				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="ComboBoxSelectionChanged"
+				<ComboBox x:Name="SelectTrackB" Grid.Row="1" Grid.Column="1" Margin="2" IsEnabled="False" SelectionChanged="SelectTrack_OnSelectionChanged"
                           VerticalAlignment="Center" Height="20" Width="64" ItemsSource="{Binding MediaDataB.ComboBoxItems}"/>
 
 				<Label Grid.Column="2" Grid.Row="0" Content="Sample start (s):" Padding="0" Margin="10,0,0,0"
@@ -212,7 +212,7 @@
 		</Grid>
 
 		<!-- Calculation results for audio sync -->
-		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="160,200,*,60,60">
+		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="160,200,*,40,60">
 
             <Label Grid.Column="0" Content="Calculated _delay:" FontSize="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
 			<Label x:Name="CalcDelayLabel" Grid.Column="1" FontSize="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
@@ -332,17 +332,17 @@
 			<Label x:Name="StatusLabel" Grid.Column="2" FontSize="18" Margin="10,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="Red"/>
 
 
-            <Button Grid.Column="3" i:Attached.Icon="fa-solid fa-sliders" Padding="6,0">
+            <Button Grid.Column="3" i:Attached.Icon="fa-solid fa-wrench" Padding="6,0" Height="34" Width="34" FontSize="16" >
 				<Button.Flyout>
-					<Flyout Placement="Top">
+					<Flyout Placement="Top" ShowMode="TransientWithDismissOnPointerMoveAway" >
 						<StackPanel Spacing="4">
-							<CheckBox Content="Write log file" IsChecked="{Binding WriteLog}" IsCheckedChanged="ShowNotificationSetting_OnIsCheckedChanged"/>
-							<CheckBox Content="Show notifications" IsChecked="{Binding ShowNotifications}" IsCheckedChanged="WriteLogSetting_OnIsCheckedChanged"/>
-							<StackPanel Orientation="Horizontal" Spacing="4">
-								<Label Content="Theme:" VerticalAlignment="Center"/>
-								<ComboBox x:Name="ThemeSelect" ItemsSource="{Binding ThemeVariants}" SelectionChanged="ThemeSelect_OnSelectionChanged"
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Label Content="Theme:" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="ThemeSelect" SelectionChanged="ThemeSelect_OnSelectionChanged"
                                           HorizontalAlignment="Center" Height="26" Width="76"/>
-							</StackPanel>
+                            </StackPanel>
+							<CheckBox x:Name="SettingWriteLog" Content="Write log file" IsCheckedChanged="WriteLogSetting_OnIsCheckedChanged"/>
+							<CheckBox x:Name="SettingShowNotification" Content="Show notifications" IsCheckedChanged="ShowNotificationSetting_OnIsCheckedChanged"/>
 						</StackPanel>
 					</Flyout>
 				</Button.Flyout>
