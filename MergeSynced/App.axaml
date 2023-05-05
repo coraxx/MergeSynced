@@ -7,7 +7,7 @@
 
 	<NativeMenu.Menu>
 		<NativeMenu>
-			<NativeMenuItem Header="About Merge Synced" Click="AboutMenuItem_OnClick" />
+			<NativeMenuItem Header="About MergeSynced" Click="AboutMenuItem_OnClick" />
 		</NativeMenu>
 	</NativeMenu.Menu>
     

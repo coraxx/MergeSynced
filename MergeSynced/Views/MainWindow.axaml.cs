@@ -32,14 +32,14 @@ namespace MergeSynced.Views
     {
         #region Fields and properties
         
-        public MergeSyncedViewModel MainViewModel = new MergeSyncedViewModel();
+        public MergeSyncedViewModel MainViewModel = new();
         
         private WindowNotificationManager? _notificationManager;
         
-        private readonly ExternalProcesses _ep = new ExternalProcesses();
+        private readonly ExternalProcesses _ep = new();
 
         // Parse time from external tools' output
-        private readonly Regex _reTime = new Regex(@"time=\s*([0-9\.:]*)", RegexOptions.IgnoreCase);
+        private readonly Regex _reTime = new(@"time=\s*([0-9\.:]*)", RegexOptions.IgnoreCase);
         private Match _timeMatchFfmpegProg = null!;
         private TimeSpan _currentTimeFfmpegProg;
 
@@ -51,7 +51,7 @@ namespace MergeSynced.Views
 
         // Debugging
         private readonly StringTraceListener _trace;
-        private Stopwatch _sw = new Stopwatch();
+        private Stopwatch _sw = new();
 
         #endregion
 
@@ -485,6 +485,8 @@ namespace MergeSynced.Views
             }
             MainViewModel.ProgressPercent = 45;
 
+            DebugTimeSpan("extracting audio A");
+
             // B
             co = SelectTrackB.SelectedItem as ComboBoxItem;
             selectedTrack = int.Parse((co != null && co.Content != null ? co.Content.ToString() : "0")!);
@@ -514,11 +516,12 @@ namespace MergeSynced.Views
             }
             MainViewModel.ProgressPercent = 60;
 
+            DebugTimeSpan("extracting audio B");
+
             // Load generated audio files
-            WavTools wt = new WavTools();
-            WavHeader? headerA = wt.ReadWav(inputA, out float[]? l1);
+            WavHeader? headerA = WavTools.ReadWav(inputA, out float[]? l1);
             MainViewModel.ProgressPercent = 65;
-            WavHeader? headerB = wt.ReadWav(inputB, out float[]? l2);
+            WavHeader? headerB = WavTools.ReadWav(inputB, out float[]? l2);
             MainViewModel.ProgressPercent = 70;
 
             DebugTimeSpan("reading wav files");
@@ -570,19 +573,27 @@ namespace MergeSynced.Views
                 }
             }
             MainViewModel.ProgressPercent = 75;
+            DebugTimeSpan("normalizing audio");
+
             byte transparency = 200;
             // Draw audio wave lines
             await Dispatcher.UIThread.InvokeAsync(() => {
                 WpfPlotAudioWaves.Plot.Clear();
                 // ReSharper disable once AccessToModifiedClosure
-                Signal sig = WpfPlotAudioWaves.Plot.Add.Signal(Array.ConvertAll(l1, Convert.ToDouble));
+                Signal sig = WpfPlotAudioWaves.Plot.Add.Signal(Array.ConvertAll(l1.Length > SettingsManager.ApplicationSettings.NoOfSampleToDraw
+                    ? WavTools.Downsample(l1, SettingsManager.ApplicationSettings.NoOfSampleToDraw)
+                    : l1, Convert.ToDouble));
                 sig.LineStyle.Color = new ScottPlot.Color(sig.LineStyle.Color.Red, sig.LineStyle.Color.Green, sig.LineStyle.Color.Blue, transparency);
                 // ReSharper disable once AccessToModifiedClosure
-                sig = WpfPlotAudioWaves.Plot.Add.Signal(Array.ConvertAll(l2, Convert.ToDouble));
+                sig = WpfPlotAudioWaves.Plot.Add.Signal(Array.ConvertAll(l2.Length > SettingsManager.ApplicationSettings.NoOfSampleToDraw
+                    ? WavTools.Downsample(l2, SettingsManager.ApplicationSettings.NoOfSampleToDraw)
+                    : l2, Convert.ToDouble));
                 sig.LineStyle.Color = new ScottPlot.Color(sig.LineStyle.Color.Red, sig.LineStyle.Color.Green, sig.LineStyle.Color.Blue, transparency);
                 WpfPlotAudioWaves.Refresh();
                 WpfPlotAudioWaves.Plot.AutoScale();
             });
+
+            DebugTimeSpan("plotting audio");
 
             // Padding data
             int padSize = l1.Length + l2.Length;
@@ -604,10 +615,14 @@ namespace MergeSynced.Views
             await Dispatcher.UIThread.InvokeAsync(() => {
                 WpfPlotCrossCorrelation.Plot.Clear();
                 // ReSharper disable once AccessToModifiedClosure
-                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr!, Convert.ToDouble));
+                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr!.Length > SettingsManager.ApplicationSettings.NoOfSampleToDraw
+                    ? WavTools.Downsample(corr, SettingsManager.ApplicationSettings.NoOfSampleToDraw)
+                    : corr, Convert.ToDouble));
                 sig.LineStyle.Color = new ScottPlot.Color(Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B, transparency);
+                WpfPlotCrossCorrelation.Plot.AutoScale();
                 WpfPlotCrossCorrelation.Refresh();
             });
+            DebugTimeSpan("plotting correlation AA");
 
             // Do cross correlation between A and B
             corr = null;
@@ -619,12 +634,14 @@ namespace MergeSynced.Views
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr!, Convert.ToDouble));
+                Signal sig = WpfPlotCrossCorrelation.Plot.Add.Signal(Array.ConvertAll(corr!.Length > SettingsManager.ApplicationSettings.NoOfSampleToDraw
+                    ? WavTools.Downsample(corr, SettingsManager.ApplicationSettings.NoOfSampleToDraw)
+                    : corr, Convert.ToDouble));
                 sig.LineStyle.Color = new ScottPlot.Color(Colors.LimeGreen.R, Colors.LimeGreen.G, Colors.LimeGreen.B, transparency);
                 WpfPlotCrossCorrelation.Plot.AutoScale();
                 WpfPlotCrossCorrelation.Refresh();
             });
-            DebugTimeSpan("plotting");
+            DebugTimeSpan("plotting correlation AB");
 
             if (headerA.SampleRate != headerB.SampleRate) SwitchButtonState(AnalyzeButton, true, $"Warning: Sample rate input A {headerA.SampleRate} not equal to input B {headerB.SampleRate}", true);
             MainViewModel.SyncDelay = Analysis.CalculateDelay(corr, headerA.SampleRate);

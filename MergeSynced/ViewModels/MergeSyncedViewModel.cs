@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using MergeSynced.Controls;
 using MergeSynced.Utilities;
 
@@ -11,6 +13,10 @@ namespace MergeSynced.ViewModels
     public class MergeSyncedViewModel : ViewModelBase
     {
         #region Fields and properties
+
+        private readonly DispatcherTimer _pollMemoryInfo = new DispatcherTimer();
+        private readonly Process _proc = new Process();
+        private readonly GCMemoryInfo _memInfo = GC.GetGCMemoryInfo();
 
         #region Configuration
 
@@ -185,6 +191,47 @@ namespace MergeSynced.ViewModels
             }
         }
 
+        private double _memoryUsedPercent = 10;
+        public double MemoryUsedPercent
+        {
+            get => _memoryUsedPercent;
+            set
+            {
+                if (value > 100) _memoryUsedPercent = 100;
+                else if (value < 0) _memoryUsedPercent = 0;
+                else _memoryUsedPercent = value;
+                if (_memoryUsedPercent > 80) MemoryUsedColor = MemRed;
+                else MemoryUsedColor = MemGreen;
+                OnPropertyChanged();
+            }
+        }
+
+        private static readonly SolidColorBrush MemGreen = new SolidColorBrush(Colors.LimeGreen);
+        private static readonly SolidColorBrush MemRed = new SolidColorBrush(Colors.Red);
+        private SolidColorBrush _memoryUsedColor = MemGreen;
+        public SolidColorBrush MemoryUsedColor
+        {
+            get => _memoryUsedColor;
+            set
+            {
+                if (value == _memoryUsedColor) return;
+                _memoryUsedColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _memoryUsedMegaBytes = "160 MB";
+        public string MemoryUsedMegaBytes
+        {
+            get => _memoryUsedMegaBytes;
+            set
+            {
+                if (value == _memoryUsedMegaBytes) return;
+                _memoryUsedMegaBytes = value;
+                OnPropertyChanged();
+            }
+        }
+
         private double _statsMaxAa;
         public double StatsMaxAa
         {
@@ -248,6 +295,13 @@ namespace MergeSynced.ViewModels
 
         public MergeSyncedViewModel()
         {
+            // Set up dispatch timer
+            _pollMemoryInfo.Interval = TimeSpan.FromSeconds(2);
+            _pollMemoryInfo.Tick += PollMemoryInfoOnTick;
+            _pollMemoryInfo.IsEnabled = true;
+
+            _proc = Process.GetCurrentProcess();
+
             // Initialize with current Theme...
             CorrPercentColor = SolidColorBrush.Parse(Application.Current?.ActualThemeVariant.Key.ToString() == "Dark" 
                 ? "#FFFFFFFF" 
@@ -319,6 +373,13 @@ namespace MergeSynced.ViewModels
             MediaDataB.ComboBoxItems.Add(comboItemB1);
             MediaDataB.ComboBoxItems.Add(comboItemB2);
             MediaDataB.ComboBoxItems.Add(comboItemB3);
+        }
+        
+        private void PollMemoryInfoOnTick(object? sender, EventArgs e)
+        {
+            _proc.Refresh();
+            MemoryUsedMegaBytes = $"{_proc.PrivateMemorySize64 / (1024f * 1024f):F0} MB";
+            MemoryUsedPercent = _memInfo.TotalAvailableMemoryBytes > 0 ? _proc.PrivateMemorySize64 / (double)_memInfo.TotalAvailableMemoryBytes * 100 : 0;
         }
     }
 }

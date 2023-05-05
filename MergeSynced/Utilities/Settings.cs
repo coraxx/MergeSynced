@@ -82,6 +82,7 @@ namespace MergeSynced.Utilities
     public class ApplicationData
     {
         public string Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "UNKNOWN";
+        public int NoOfSampleToDraw = 100000;
     }
 
     public struct SettingsData
