@@ -92,6 +92,9 @@ namespace MergeSynced.Views
                 {
                     SetWpfPlotStatic(WpfPlotAudioWaves);
                     SetWpfPlotStatic(WpfPlotCrossCorrelation);
+                    DelayIcon.InvalidateVisual();
+                    DelayIconAb.InvalidateVisual();
+                    DelayIconBa.InvalidateVisual();
                 };
 
             if (MainViewModel.MkvmergeAvailable) ProbeButton.ClearValue(BackgroundProperty);
@@ -127,6 +130,11 @@ namespace MergeSynced.Views
             {
                 Source = MainViewModel,
                 Path = nameof(MainViewModel.ShowNotifications)
+            });
+
+            UseMkvMergeCheckBox.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(_ =>
+            {
+                CheckModeAndFiles();
             });
 
             if (SettingsManager.UserSettings.ShowNotifications)
@@ -546,8 +554,8 @@ namespace MergeSynced.Views
             DebugTimeSpan("padding wav data");
             MainViewModel.ProgressPercent = 80;
 
-            int size = l1.Length < l2.Length ? l1.Length : l2.Length;
-            double estimatedMemoryUsage = (3 * size * sizeof(float) + 4 * SettingsManager.ApplicationSettings.NoOfSampleToDraw * sizeof(double)) / 1024.0 / 1024.0;
+            //int size = l1.Length < l2.Length ? l1.Length : l2.Length;
+            //double estimatedMemoryUsage = (3 * size * sizeof(float) + 4 * SettingsManager.ApplicationSettings.NoOfSampleToDraw * sizeof(double)) / 1024.0 / 1024.0;
 
             // Cross correlate to itself in order to display a proper fit percentage
             float[]? corr = null;
@@ -832,8 +840,9 @@ namespace MergeSynced.Views
 
                 SwitchButtonState(MergeButton, false,
                     _ep.FfmpegWasAborted || _ep.MkvmergeProcess.ExitCode > 0
-                        ? "mkvmerge process aborted"
-                        : "Merge done", _ep.FfmpegWasAborted || _ep.MkvmergeProcess.ExitCode > 0);
+                        ? $"mkvmerge process exited with {_ep.MkvmergeProcess.ExitCode}"
+                        : "Merge done",
+                    _ep.FfmpegWasAborted || _ep.MkvmergeProcess.ExitCode > 0);
             }
             // Using ffmpeg   /////////////////////////////////////////////////////////////////////////////////////////
             else
@@ -868,7 +877,9 @@ namespace MergeSynced.Views
                 await _ep.FfmpegProcess!.WaitForExitAsync();
 
                 SwitchButtonState(MergeButton, false,
-                    _ep.FfmpegWasAborted || _ep.FfmpegProcess.ExitCode > 0 ? "ffmpeg process aborted" : "Merge done",
+                    _ep.FfmpegWasAborted || _ep.FfmpegProcess.ExitCode > 0
+                        ? $"ffmpeg process exited with {_ep.FfmpegProcess.ExitCode}"
+                        : "Merge done",
                     _ep.FfmpegWasAborted || _ep.FfmpegProcess.ExitCode > 0);
             }
             MainViewModel.ProgressPercent = 100;
@@ -877,9 +888,9 @@ namespace MergeSynced.Views
 
         private void Abort_OnClick(object sender, RoutedEventArgs e)
         {
-            SwitchButtonState(AbortButton, true, "Aborting ffmpeg process", true);
+            SwitchButtonState(AbortButton, true, "Aborting current process", true);
             bool ret = _ep.AbortMerge();
-            SwitchButtonState(AbortButton, false, ret ? "ffmpeg process aborted" : "no merge process to abort");
+            SwitchButtonState(AbortButton, false, ret ? "Process aborted" : "No process to abort");
         }
 
         private void OpenTempFolder_OnClick(object sender, RoutedEventArgs e)
@@ -1067,6 +1078,33 @@ namespace MergeSynced.Views
             });
         }
 
+        public void CheckModeAndFiles()
+        {
+            bool wrongMode = FilePathA.Text != null 
+                             && Path.GetExtension(FilePathA.Text).Length > 1
+                             && (Path.GetExtension(FilePathA.Text).ToLower() == ".mkv" && !MainViewModel.UseMkvmerge
+                                 || Path.GetExtension(FilePathA.Text).ToLower() != ".mkv" && MainViewModel.UseMkvmerge);
+            wrongMode = wrongMode
+                        || FilePathB.Text != null
+                            && Path.GetExtension(FilePathB.Text).Length > 1
+                            && (Path.GetExtension(FilePathB.Text).ToLower() == ".mkv" && !MainViewModel.UseMkvmerge
+                                || Path.GetExtension(FilePathB.Text).ToLower() != ".mkv" && MainViewModel.UseMkvmerge);
+
+            Dispatcher.UIThread.InvokeAsync(() => {
+                if (wrongMode)
+                {
+                    StatusLabel.Content = MainViewModel.UseMkvmerge ? "Disable 'use mkvmerge' for current file type" : "Enable 'use mkvmerge' for current file type";
+                    StatusLabel.Foreground = SolidColorBrush.Parse("#0078D4");
+                    _notificationManager?.Show(new Notification("Info", StatusLabel.Content.ToString()));
+                }
+                else
+                {
+                    StatusLabel.Content = "";
+                    StatusLabel.Foreground = new SolidColorBrush(Colors.Black);
+                }
+            });
+        }
+
         private void DebugTimeSpan(string msg)
         {
             if (!Debugger.IsAttached) return;
@@ -1124,6 +1162,7 @@ namespace MergeSynced.Views
 
             // Write to textbox
             tb.Text = filePaths.First().TryGetLocalPath();
+
             switch (tb.Name)
             {
                 case "FilePathA":
@@ -1150,6 +1189,7 @@ namespace MergeSynced.Views
                     break;
             }
             SwitchButtonState(ProbeButton, false);
+            CheckModeAndFiles();
         }
 
         private void UseMkvMergeCheckBox_CheckChange(object sender, RoutedEventArgs e)
