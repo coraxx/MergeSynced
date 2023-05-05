@@ -1,17 +1,28 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:MergeSynced"
-             x:Class="MergeSynced.App" Name="MergeSynced">
+             x:Class="MergeSynced.App"
+             Name="MergeSynced"
+             RequestedThemeVariant="Default">
 
 	<NativeMenu.Menu>
 		<NativeMenu>
-			<NativeMenuItem Header="About Merge Synced" Click="AboutMenuItem_OnClick" />
+			<NativeMenuItem Header="About MergeSynced" Click="AboutMenuItem_OnClick" />
 		</NativeMenu>
 	</NativeMenu.Menu>
     
     <Application.Styles>
-        <FluentTheme Mode="Light"/>
-        <!--<StyleInclude Source="/Controls/CustomCheckBox.axaml" />-->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark"
+                                       RegionColor="#FF232323"
+                                       AltHigh="#FF232323"
+                                       AltLow="#FF232323"
+                                       AltMedium="#FF232323"
+                                       AltMediumHigh="#FF232323"
+                                       AltMediumLow="#FF232323"  />
+            </FluentTheme.Palettes>
+        </FluentTheme>
     </Application.Styles>
 
     <Application.Resources>

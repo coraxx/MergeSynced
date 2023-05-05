@@ -17,7 +17,7 @@ namespace MergeSynced.Audio
         /// <param name="l">Output of left channel</param>
         /// <param name="r">Output of right channel</param>
         /// <returns>Details of wav file</returns>
-        public WavHeader? ReadWav(string filename, out float[]? l, out float[]? r)
+        public static WavHeader? ReadWav(string filename, out float[]? l, out float[]? r)
         {
             l = r = null;
 
@@ -161,7 +161,7 @@ namespace MergeSynced.Audio
         /// <param name="filename">Path to file name</param>
         /// <param name="m">Output of left channel</param>
         /// <returns>Details of wav file</returns>
-        public WavHeader? ReadWav(string filename, out float[]? m)
+        public static WavHeader? ReadWav(string filename, out float[]? m)
         {
             m = null;
 
@@ -289,6 +289,87 @@ namespace MergeSynced.Audio
                 Debug.WriteLine(ex);
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Source: https://gist.github.com/adrianseeley/264417d295ccd006e7fd
+        /// </summary>
+        /// <param name="array">Input data</param>
+        /// <param name="length">Length of return array</param>
+        /// <returns></returns>
+        public static float[] Downsample(float[] array, int length)
+        {
+            int insert = 0;
+            float[] window = new float[length];
+            float[] windowX = new float[length];
+            int bucketSizeLessStartAndEnd = length - 2;
+
+            float bucketSize = (float)(array.Length - 2) / bucketSizeLessStartAndEnd;
+            int a = 0;
+            int nextA = 0;
+            int maxAreaPointX = 0;
+            float maxAreaPointY = 0f;
+            window[insert] = array[a]; // Always add the first point
+            windowX[insert] = 0;
+            insert++;
+            for (int i = 0; i < bucketSizeLessStartAndEnd; i++)
+            {
+                // Calculate point average for next bucket (containing c)
+                float avgX = 0;
+                float avgY = 0;
+                int start = (int)(Math.Floor((i + 1) * bucketSize) + 1);
+                int end = (int)(Math.Floor((i + 2) * bucketSize) + 1);
+                if (end >= array.Length)
+                {
+                    end = array.Length;
+                }
+                int span = end - start;
+                for (; start < end; start++)
+                {
+                    avgX += start;
+                    avgY += array[start];
+                }
+                avgX /= span;
+                avgY /= span;
+
+                // Get the range for this bucket
+                int bucketStart = (int)(Math.Floor((i + 0) * bucketSize) + 1);
+                int bucketEnd = (int)(Math.Floor((i + 1) * bucketSize) + 1);
+                bucketEnd = bucketEnd > array.Length ? array.Length : bucketEnd;
+
+                // Point a
+                float aX = a;
+                float aY = array[a];
+                float maxArea = -1;
+                for (; bucketStart < bucketEnd; bucketStart++)
+                {
+                    // Calculate triangle area over three buckets
+                    if (bucketStart >= array.Length)
+                    {
+                        continue;
+                    };
+                    float area = Math.Abs((aX - avgX) * (array[bucketStart] - aY) - (aX - (float)bucketStart) * (avgY - aY)) * 0.5f;
+                    if (area > maxArea)
+                    {
+                        maxArea = area;
+                        maxAreaPointX = bucketStart;
+                        maxAreaPointY = array[bucketStart];
+                        nextA = bucketStart; // Next a is this b
+                    }
+                }
+                // Pick this point from the Bucket
+                window[insert] = maxAreaPointY;
+                windowX[insert] = maxAreaPointX;
+                insert++;
+
+                // Current a becomes the next_a (chosen b)
+                a = nextA;
+            }
+
+            window[insert] = array[^1]; // Always add last
+            windowX[insert] = array.Length;
+
+            return window;
         }
     }
 }
