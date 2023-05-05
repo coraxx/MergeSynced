@@ -155,8 +155,6 @@ namespace MergeSynced.Utilities
                 // Get length of file
                 md.Duration = TimeSpan.FromSeconds(Convert.ToDouble(json["format"]?["duration"]?.ToString(), new CultureInfo("en-us")));
 
-                bool audioTrackSelected = false;
-
                 foreach (JToken stream in json["streams"]!)
                 {
                     string? language = string.Empty;
@@ -193,7 +191,6 @@ namespace MergeSynced.Utilities
                                 Content = cb.Index.ToString()
                             };
                             md.ComboBoxItems.Add(co);
-                            audioTrackSelected = true;
                             break;
                         case "subtitle":
                             cb.TypeBrush = new SolidColorBrush(Colors.Yellow);
@@ -205,8 +202,6 @@ namespace MergeSynced.Utilities
 
                     md.ListBoxItems.Add(cb);
                 }
-
-                if (audioTrackSelected) md.ListBoxItems.First().IsSelected = true;
             }
             catch (Exception e)
             {
@@ -383,8 +378,6 @@ namespace MergeSynced.Utilities
                 // ReSharper disable once PossibleLossOfFraction
                 if (!string.IsNullOrEmpty(duration)) md.Duration = TimeSpan.FromSeconds(Convert.ToInt32(duration.Substring(0, duration.Length - 6)) / 1000); // ns -> ms -> s
 
-                bool audioTrackSelected = false;
-
                 foreach (JToken stream in json["tracks"]!)
                 {
                     CheckBoxMedia cb = new CheckBoxMedia
@@ -420,7 +413,6 @@ namespace MergeSynced.Utilities
                                 Content = cb.Index.ToString()
                             };
                             md.ComboBoxItems.Add(co);
-                            audioTrackSelected = true;
                             break;
                         case "subtitles":
                             cb.TypeBrush = new SolidColorBrush(Colors.Yellow);
@@ -432,8 +424,6 @@ namespace MergeSynced.Utilities
 
                     md.ListBoxItems.Add(cb);
                 }
-
-                if (audioTrackSelected) md.ListBoxItems.First().IsSelected = true;
 
                 try
                 {

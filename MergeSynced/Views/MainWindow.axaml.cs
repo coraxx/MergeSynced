@@ -30,7 +30,7 @@ namespace MergeSynced.Views
 {
     public partial class MainWindow : Window
     {
-        #region Fields and properties
+        #region Fields
         
         public MergeSyncedViewModel MainViewModel = new();
         
@@ -47,15 +47,13 @@ namespace MergeSynced.Views
         private readonly string _settingsDir;
         private readonly string _workingDir;
 
-        private const int ProbeLengthInSeconds = 20;
-
         // Debugging
         private readonly StringTraceListener _trace;
         private Stopwatch _sw = new();
 
         #endregion
 
-        #region CTOR and base app events
+        #region CTOR and window events
 
         public MainWindow()
         {
@@ -76,6 +74,7 @@ namespace MergeSynced.Views
             Trace.Listeners.Add(_trace);
             Trace.AutoFlush = true;
 
+            // Only allow input of numbers
             SampleStart.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput!, RoutingStrategies.Tunnel);
             SampleDuration.AddHandler(TextInputEvent, Uint32_OnPreviewTextInput!, RoutingStrategies.Tunnel);
 
@@ -95,25 +94,7 @@ namespace MergeSynced.Views
                     SetWpfPlotStatic(WpfPlotCrossCorrelation);
                 };
 
-            // Check if ffmpeg and mkvmerge is available
-            if (OperatingSystem.IsWindows())
-            {
-                MainViewModel.FfmpegAvailable = SearchBinaryInPath("ffmpeg.exe");
-                MainViewModel.FfprobeAvailable = SearchBinaryInPath("ffprobe.exe");
-                MainViewModel.MkvmergeAvailable = SearchBinaryInPath("mkvmerge.exe");
-            }
-            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-            {
-                MainViewModel.FfmpegAvailable = SearchBinaryInPath("ffmpeg");
-                MainViewModel.FfprobeAvailable = SearchBinaryInPath("ffprobe");
-                MainViewModel.MkvmergeAvailable = SearchBinaryInPath("mkvmerge");
-            }
-
-            if (MainViewModel.MkvmergeAvailable)
-            {
-                MainViewModel.UseMkvmerge = MainViewModel is { FfmpegAvailable: false, FfprobeAvailable: false };
-                ProbeButton.ClearValue(BackgroundProperty);
-            }
+            if (MainViewModel.MkvmergeAvailable) ProbeButton.ClearValue(BackgroundProperty);
 
             if (MainViewModel is { FfmpegAvailable: false, FfprobeAvailable: false, MkvmergeAvailable: false }) SwitchButtonState(ProbeButton, false, "No ffmpeg in PATH", true);
         }
@@ -127,10 +108,6 @@ namespace MergeSynced.Views
             // Add event handler in order to expose logs
             if (SettingsManager.UserSettings.WriteLog)
                 _trace.GenerateLogfile(Path.Combine(_workingDir, "log.txt"));
-
-            // Write back loaded setting states before binding to control for correct initial state
-            MainViewModel.WriteLog = SettingsManager.UserSettings.WriteLog;
-            MainViewModel.ShowNotifications = SettingsManager.UserSettings.ShowNotifications;
 
             // Bindings for settings from CodeBehind to avoid trigger on open/close of fly out
             ThemeSelect.Bind(ItemsControl.ItemsSourceProperty, new Binding
@@ -187,6 +164,7 @@ namespace MergeSynced.Views
             if (Application.Current?.ActualThemeVariant == ThemeVariant.Dark) wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#232323"), ScottPlot.Color.FromHex("#232323"));
             else wpfPlot.Plot.Style.Background(ScottPlot.Color.FromHex("#FFFFFFFF"), ScottPlot.Color.FromHex("#FFFFFFFF"));
 
+            // Currently not available in v5 beta
             //wpfPlot.Configuration.LeftClickDragPan = false;
             //wpfPlot.Configuration.RightClickDragZoom = false;
             //wpfPlot.Configuration.DoubleClickBenchmark = false;
@@ -210,44 +188,6 @@ namespace MergeSynced.Views
             string tempDirPath = Path.Combine(Path.GetTempPath(), $"{Assembly.GetExecutingAssembly().GetName().Name}_{Path.GetRandomFileName()}");
             Directory.CreateDirectory(tempDirPath);
             return tempDirPath;
-        }
-
-        private bool _initialPathExtensionOnMacDone;
-        private bool SearchBinaryInPath(string binaryName)
-        {
-            string? pathData = Environment.GetEnvironmentVariable("PATH");
-
-            if (pathData == null) return false;
-
-            List<string> paths = new List<string>();
-            if (OperatingSystem.IsWindows())
-            {
-                paths = pathData.Split(';').ToList();
-            }
-            else if (OperatingSystem.IsMacOS())
-            {
-                paths = pathData.Split(':').ToList();
-
-                // If .app bundle is called, current user PATH is normally not passed in, so try a few common ones
-                if (!paths.Any(path => File.Exists(Path.Combine(path, binaryName))) && !_initialPathExtensionOnMacDone)
-                {
-                    string appBundleMissingPaths =
-                        "/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin";
-                    Environment.SetEnvironmentVariable("PATH", $"{appBundleMissingPaths}:{pathData}");
-                    _initialPathExtensionOnMacDone = true;
-                    Trace.WriteLine(
-                        $"Could not find {binaryName} in {pathData}, adding {appBundleMissingPaths} to $PATH and trying again");
-                    pathData = Environment.GetEnvironmentVariable("PATH");
-                    if (pathData == null) return false;
-                    paths = pathData.Split(':').ToList();
-                }
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                paths = pathData.Split(':').ToList();
-            }
-
-            return paths.Any(path => File.Exists(Path.Combine(path, binaryName)));
         }
 
         #endregion
@@ -279,7 +219,7 @@ namespace MergeSynced.Views
 
             SwitchButtonState(ProbeButton, true, "Probing...");
 
-            // Clear Data
+            // Clear data
             WpfPlotAudioWaves.Plot.Clear();
             WpfPlotAudioWaves.Refresh();
             WpfPlotCrossCorrelation.Plot.Clear();
@@ -402,7 +342,7 @@ namespace MergeSynced.Views
             ProbeButton.IsEnabled = false;
             MergeButton.IsEnabled = false;
 
-            // Clear Data
+            // Clear Data - Currently not available in v5 beta
             //Annotation graphLabel = WpfPlotAudioWaves.Plot.Add.Annotation("Updating", WpfPlotAudioWaves.Bounds.Width * 0.5 - 40, WpfPlotAudioWaves.Bounds.Height * 0.5 - 10);
             //graphLabel.Font.Size = 24;
             //graphLabel.Font.Name = "Impact";
@@ -442,7 +382,7 @@ namespace MergeSynced.Views
             }
 
             bool durationResult = int.TryParse(SampleDuration.Text, out int sampleDurationSeconds);
-            if (!durationResult) sampleDurationSeconds = ProbeLengthInSeconds;
+            if (!durationResult) sampleDurationSeconds = 20;
             int.TryParse(SampleStart.Text, out int startTime);
 
             _sw.Restart();
@@ -606,6 +546,9 @@ namespace MergeSynced.Views
             DebugTimeSpan("padding wav data");
             MainViewModel.ProgressPercent = 80;
 
+            int size = l1.Length < l2.Length ? l1.Length : l2.Length;
+            double estimatedMemoryUsage = (3 * size * sizeof(float) + 4 * SettingsManager.ApplicationSettings.NoOfSampleToDraw * sizeof(double)) / 1024.0 / 1024.0;
+
             // Cross correlate to itself in order to display a proper fit percentage
             float[]? corr = null;
             await Task.Run(() => Analysis.CrossCorrelation(l1, l1, out corr));
@@ -727,7 +670,6 @@ namespace MergeSynced.Views
             // Using mkvmerge /////////////////////////////////////////////////////////////////////////////////////////
             if (MainViewModel.UseMkvmerge)
             {
-                string delayFormatted = Convert.ToInt32(Math.Round(-1 * MainViewModel.SyncDelay * 1000)).ToString(); // Delay has to be inverted and in ms
                 string args = $"--output \"{FilePathOut.Text}\"";
 
                 string trackOrderAudio = "";
@@ -736,10 +678,10 @@ namespace MergeSynced.Views
                 string trackOrderUnknown = "";
 
                 // Select streams from A
-                List<int> audioTracks = new List<int>();
-                List<int> videoTracks = new List<int>();
-                List<int> subtitleTracks = new List<int>();
-                List<int> attachments = new List<int>();
+                List<int> audioTracks = new();
+                List<int> videoTracks = new();
+                List<int> subtitleTracks = new();
+                List<int> attachments = new();
                 bool copyChapters = false;
                 foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataA.ListBoxItems)
                 {
@@ -791,7 +733,7 @@ namespace MergeSynced.Views
                 args = $"{args} \"(\" \"{FilePathA.Text}\" \")\"";
 
                 // Select streams from B
-                //args = $"{args} --sync -1:{delayFormatted}";
+                //args = $"{args} --sync -1:{MainViewModel.SyncOffset}";
 
                 audioTracks.Clear();
                 videoTracks.Clear();
@@ -806,12 +748,12 @@ namespace MergeSynced.Views
                         {
                             case "audio":
                                 audioTracks.Add(listBoxItem.Index);
-                                args = $"{args} --sync {listBoxItem.Index}:{delayFormatted}";
+                                args = $"{args} --sync {listBoxItem.Index}:{MainViewModel.SyncOffset}";
                                 trackOrderAudio = trackOrderAudio != "" ? $"{trackOrderAudio},1:{listBoxItem.Index}" : $"1:{listBoxItem.Index}";
                                 break;
                             case "subtitles":
                                 subtitleTracks.Add(listBoxItem.Index);
-                                args = $"{args} --sync {listBoxItem.Index}:{delayFormatted}";
+                                args = $"{args} --sync {listBoxItem.Index}:{MainViewModel.SyncOffset}";
                                 trackOrderSubs = trackOrderSubs != "" ? $"{trackOrderSubs},1:{listBoxItem.Index}" : $"1:{listBoxItem.Index}";
                                 break;
                             case "video":
@@ -826,7 +768,7 @@ namespace MergeSynced.Views
                                 break;
                             default:
                                 Debug.WriteLine($"WARNING: Unknown track type: {listBoxItem.CodecType}");
-                                args = $"{args} --sync {listBoxItem.Index}:{delayFormatted}";
+                                args = $"{args} --sync {listBoxItem.Index}:{MainViewModel.SyncOffset}";
                                 trackOrderUnknown = trackOrderUnknown != "" ? $"{trackOrderUnknown},1:{listBoxItem.Index}" : $"1:{listBoxItem.Index}";
                                 break;
                         }
@@ -896,8 +838,7 @@ namespace MergeSynced.Views
             // Using ffmpeg   /////////////////////////////////////////////////////////////////////////////////////////
             else
             {
-                string delayFormatted = Convert.ToString(-1 * MainViewModel.SyncDelay, new CultureInfo("en-us")); // Delay has to be inverted
-                string args = $"-y -i \"{FilePathA.Text}\" -itsoffset {delayFormatted} -i \"{FilePathB.Text}\"";
+                string args = $"-y -i \"{FilePathA.Text}\" -itsoffset {MainViewModel.SyncOffset} -i \"{FilePathB.Text}\"";
 
                 // Select streams from B
                 foreach (CheckBoxMedia listBoxItem in MainViewModel.MediaDataA.ListBoxItems)
@@ -1257,7 +1198,7 @@ namespace MergeSynced.Views
 
         private void ThemeSelect_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
-            if (sender is not ComboBox cb || ThemeSelect.SelectedItem == null) return;
+            if (ThemeSelect.SelectedItem == null) return;
 
             SettingsManager.UserSettings.SelectedTheme = (ThemeVariant)ThemeSelect.SelectedItem;
             SetSelectedTheme();

@@ -119,6 +119,16 @@
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0"/>
                 </Style>
+				<!-- Ignore some theme colors -->
+                <Style Selector="CheckBox:unchecked /template/ Border#NormalRectangle">
+                    <Setter Property="BorderBrush" Value="#353535"/>
+                </Style>
+                <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+                    <Setter Property="BorderBrush" Value="#181818"/>
+                </Style>
+                <Style Selector="CheckBox:pointerover /template/ ContentPresenter#ContentPresenter">
+                    <Setter Property="Foreground" Value="Black"/>
+                </Style>
             </ListBox.Styles>
         </ListBox>
         <ListBox x:Name="SelectionB" Grid.Row="1" Grid.Column="1" ItemsSource="{Binding MediaDataB.ListBoxItems}" SelectionMode="Single"
@@ -135,6 +145,16 @@
                 <!-- Give the ListBoxItems a fixed with of 100 and right-align them -->
                 <Style Selector="ListBoxItem">
                     <Setter Property="Padding" Value="0"/>
+                </Style>
+                <!-- Ignore some theme colors -->
+                <Style Selector="CheckBox:unchecked /template/ Border#NormalRectangle">
+                    <Setter Property="BorderBrush" Value="#353535"/>
+                </Style>
+                <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+                    <Setter Property="BorderBrush" Value="#181818"/>
+                </Style>
+                <Style Selector="CheckBox:pointerover /template/ ContentPresenter#ContentPresenter">
+                    <Setter Property="Foreground" Value="Black"/>
                 </Style>
             </ListBox.Styles>
         </ListBox>
@@ -212,11 +232,18 @@
 		</Grid>
 
 		<!-- Calculation results for audio sync -->
-		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="160,200,*,60,50,60">
+		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="140,200,*,54,50,60">
 
-            <Label Grid.Column="0" Content="Calculated _delay:" FontSize="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
-			<Label x:Name="CalcDelayLabel" Grid.Column="1" FontSize="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
-		       Content="{Binding  SyncDelay, StringFormat={}{0:0.####} s, FallbackValue=0.123}"/>
+			<StackPanel Grid.Column="0">
+                <Label Content="Calculated delay:" FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+                <Label Content="Applied offset for B:" FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+            </StackPanel>
+            <StackPanel  Grid.Column="1">
+                <Label x:Name="CalcDelayLabel" FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
+		           Content="{Binding  SyncDelay, StringFormat={}{0:0.####} s, FallbackValue=0.123}"/>
+                <Label FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
+                       Content="{Binding SyncOffsetFormatted, FallbackValue=-0.123}"/>
+            </StackPanel>
 
 			<Image x:Name="DelayIcon" Grid.Column="1" HorizontalAlignment="Right" IsVisible="{Binding DelayIconEqualVisible}">
 				<Image.Source>
@@ -331,15 +358,22 @@
 
 			<Label x:Name="StatusLabel" Grid.Column="2" FontSize="18" Margin="10,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="Red"/>
 			
-            <StackPanel Grid.Column="3" Spacing="2" Orientation="Vertical" VerticalAlignment="Center">
-				<Label Content="Memory used" Padding="0" Margin="0" HorizontalAlignment="Right" FontSize="8" />
-				<Label Content="{Binding MemoryUsedMegaBytes}" Padding="0" Margin="0" HorizontalAlignment="Right" FontSize="8" />
-				<ProgressBar Value="{Binding MemoryUsedPercent}" FlowDirection="RightToLeft" Foreground="{Binding MemoryUsedColor}" Width="50" MinWidth="10" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" Margin="0"/>
+            <StackPanel Grid.Column="3" Spacing="0" Orientation="Vertical" VerticalAlignment="Center">
+				<Label Content="App memory" Padding="0" Margin="0" HorizontalAlignment="Right" FontSize="8"/>
+				<Label Content="{Binding MemoryUsedMegaBytesFormatted}" Padding="0" Margin="0"
+                       HorizontalAlignment="Right" FontSize="8" Foreground="DarkOrchid"/>
+                <Panel Margin="0,0,0,0" Height="12">
+                    <ProgressBar Value="{Binding MemoryUsedPercentTotal}" FlowDirection="RightToLeft" Foreground="{Binding MemoryUsedTotalColor}"
+                                 Width="54" Height="8" MinWidth="10" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" Margin="0"/>
+                    <ProgressBar Value="{Binding MemoryUsedPercent}" FlowDirection="RightToLeft" Foreground="DarkOrchid"
+                                 Width="54" Height="8" MinWidth="10" HorizontalAlignment="Right" Background="Transparent" VerticalAlignment="Center" Padding="0" Margin="0"/>
+                    <Label Content="Total" Padding="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" Foreground="#878787"/>
+                </Panel>
             </StackPanel>
 
             <Button Grid.Column="4" HorizontalAlignment="Center" i:Attached.Icon="fa-solid fa-wrench" Padding="6,0" Height="34" Width="34" FontSize="16" >
 				<Button.Flyout>
-					<Flyout Placement="Top" ShowMode="TransientWithDismissOnPointerMoveAway" >
+					<Flyout Placement="Top" ShowMode="TransientWithDismissOnPointerMoveAway">
 						<StackPanel Spacing="4">
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <Label Content="Theme:" VerticalAlignment="Center"/>
