@@ -234,14 +234,14 @@
 		<!-- Calculation results for audio sync -->
 		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="140,200,*,54,50,60">
 
-			<StackPanel Grid.Column="0">
-                <Label Content="Calculated delay:" FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
-                <Label Content="Applied offset for B:" FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+			<StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="0">
+                <Label Content="Calculated delay:" FontSize="14" Height="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
+                <Label Content="Applied offset for B:" FontSize="14" Height="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>
             </StackPanel>
-            <StackPanel  Grid.Column="1">
-                <Label x:Name="CalcDelayLabel" FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
+            <StackPanel  Grid.Column="1" VerticalAlignment="Center" Spacing="0">
+                <Label x:Name="CalcDelayLabel" FontSize="14" Height="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
 		           Content="{Binding  SyncDelay, StringFormat={}{0:0.####} s, FallbackValue=0.123}"/>
-                <Label FontSize="14" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
+                <Label FontSize="14" Height="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"
                        Content="{Binding SyncOffsetFormatted, FallbackValue=-0.123}"/>
             </StackPanel>
 
@@ -359,14 +359,15 @@
 			<Label x:Name="StatusLabel" Grid.Column="2" FontSize="18" Margin="10,0,0,0" VerticalAlignment="Center" VerticalContentAlignment="Center" Foreground="Red"/>
 			
             <StackPanel Grid.Column="3" Spacing="0" Orientation="Vertical" VerticalAlignment="Center">
-				<Label Content="App memory" Padding="0" Margin="0" HorizontalAlignment="Right" FontSize="8"/>
-				<Label Content="{Binding MemoryUsedMegaBytesFormatted}" Padding="0" Margin="0"
-                       HorizontalAlignment="Right" FontSize="8" Foreground="DarkOrchid"/>
+				<Label Content="App memory" Padding="0" Margin="0" Height="12"
+					   HorizontalAlignment="Right" FontSize="9"/>
+				<Label Content="{Binding MemoryUsedMegaBytesFormatted}" Padding="0" Margin="0" Height="13"
+                       HorizontalAlignment="Right" FontSize="9" Foreground="DarkOrchid"/>
                 <Panel Margin="0,0,0,0" Height="12">
                     <ProgressBar Value="{Binding MemoryUsedPercentTotal}" FlowDirection="RightToLeft" Foreground="{Binding MemoryUsedTotalColor}"
-                                 Width="54" Height="8" MinWidth="10" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" Margin="0"/>
+                                 Width="54" Height="10" MinWidth="10" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="0" Margin="0"/>
                     <ProgressBar Value="{Binding MemoryUsedPercent}" FlowDirection="RightToLeft" Foreground="DarkOrchid"
-                                 Width="54" Height="8" MinWidth="10" HorizontalAlignment="Right" Background="Transparent" VerticalAlignment="Center" Padding="0" Margin="0"/>
+                                 Width="54" Height="10" MinWidth="10" HorizontalAlignment="Right" Background="Transparent" VerticalAlignment="Center" Padding="0" Margin="0"/>
                     <Label Content="Total" Padding="0" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" Foreground="#878787"/>
                 </Panel>
             </StackPanel>

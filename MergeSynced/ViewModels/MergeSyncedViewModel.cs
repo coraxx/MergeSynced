@@ -466,11 +466,21 @@ namespace MergeSynced.ViewModels
         {
             _proc.Refresh();
             _memInfo = GC.GetGCMemoryInfo();
-            MemoryUsedMegaBytes = _proc.PrivateMemorySize64 / 1024.0 / 1024.0;
-            MemoryUsedMegaBytesFormatted = $"{MemoryUsedMegaBytes:F0} MB";
             TotalMemoryAvailMegaBytes = _memInfo.TotalAvailableMemoryBytes / 1024.0 / 1024.0;
-            MemoryUsedPercentTotal = _memInfo.TotalAvailableMemoryBytes > 0 ? _memInfo.MemoryLoadBytes / (double)_memInfo.TotalAvailableMemoryBytes * 100 : 0;
-            MemoryUsedPercent = _memInfo.TotalAvailableMemoryBytes > 0 ? _proc.PrivateMemorySize64 / (double)_memInfo.TotalAvailableMemoryBytes * 100 : 0;
+            
+            if (OperatingSystem.IsWindows())
+            {
+                MemoryUsedMegaBytes = _proc.PrivateMemorySize64 / 1024.0 / 1024.0;
+                MemoryUsedPercentTotal = _memInfo.TotalAvailableMemoryBytes > 0 ? _memInfo.MemoryLoadBytes / (double)_memInfo.TotalAvailableMemoryBytes * 100 : 0;
+                MemoryUsedPercent = _memInfo.TotalAvailableMemoryBytes > 0 ? _proc.PrivateMemorySize64 / (double)_memInfo.TotalAvailableMemoryBytes * 100 : 0;
+            }
+            else
+            {
+                MemoryUsedMegaBytes = _proc.WorkingSet64 / 1024.0 / 1024.0;
+                MemoryUsedPercentTotal = 0; // Currently not available
+                MemoryUsedPercent = _memInfo.TotalAvailableMemoryBytes > 0 ? _proc.WorkingSet64 / (double)_memInfo.TotalAvailableMemoryBytes * 100 : 0;
+            }
+            MemoryUsedMegaBytesFormatted = $"{MemoryUsedMegaBytes:F0} MB";
         }
 
         private bool SearchBinaryInPath(string binaryName)

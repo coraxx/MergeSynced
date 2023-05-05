@@ -982,6 +982,7 @@ namespace MergeSynced.Views
             if (dialog.Count > 0)
             {
                 FilePathA.Text = dialog[0].Path.LocalPath;
+                CheckModeAndFiles();
             }
         }
 
@@ -1017,6 +1018,7 @@ namespace MergeSynced.Views
             if (dialog.Count > 0)
             {
                 FilePathB.Text = dialog[0].Path.LocalPath;
+                CheckModeAndFiles();
             }
         }
 
