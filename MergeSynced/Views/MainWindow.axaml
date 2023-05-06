@@ -232,7 +232,7 @@
 		</Grid>
 
 		<!-- Calculation results for audio sync -->
-		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="140,200,*,54,50,60">
+		<Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" ColumnDefinitions="150,200,*,54,50,60">
 
 			<StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="0">
                 <Label Content="Calculated delay:" FontSize="14" Height="18" VerticalAlignment="Center" VerticalContentAlignment="Center" Padding="0" Margin="5 0 0 0"/>

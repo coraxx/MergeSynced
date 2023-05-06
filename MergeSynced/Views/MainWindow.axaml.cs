@@ -309,6 +309,11 @@ namespace MergeSynced.Views
                 SelectTrackA.IsEnabled = true;
 
                 _ep.CallFfprobe(FilePathB.Text, _workingDir);
+                if (_ep.FfprobeProcess == null!)
+                {
+                    SwitchButtonState(ProbeButton, false, "Error starting ffprobe", true);
+                    return;
+                }
                 await _ep.FfprobeProcess.WaitForExitAsync();
 
                 MainViewModel.ProgressPercent = 75;
@@ -939,7 +944,7 @@ namespace MergeSynced.Views
             if (folderLink is not null)
             {
                 IStorageFolder? folder = await StorageProvider.TryGetFolderFromPathAsync(folderLink);
-                if (folder != null) filePickerOptions.SuggestedStartLocation = folder;
+                if (folder != null && !OperatingSystem.IsLinux()) filePickerOptions.SuggestedStartLocation = folder;
             }
 
             IStorageFile? dialog = await StorageProvider.SaveFilePickerAsync(filePickerOptions);
