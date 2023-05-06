@@ -10,11 +10,9 @@ namespace MergeSynced.Controls
         public TimeSpan Duration = TimeSpan.Zero;
         public string Title = string.Empty;
 
-        private ObservableCollection<CheckBoxMedia>? _listBoxItems;
-        public ObservableCollection<CheckBoxMedia> ListBoxItems => _listBoxItems ??= new ObservableCollection<CheckBoxMedia>();
+        public ObservableCollection<CheckBoxMedia> ListBoxItems { get; } = new();
 
-        private ObservableCollection<ComboBoxItem>? _comboBoxItems;
-        public ObservableCollection<ComboBoxItem> ComboBoxItems => _comboBoxItems ??= new ObservableCollection<ComboBoxItem>();
+        public ObservableCollection<ComboBoxItem> ComboBoxItems { get; } = new();
 
         public void Clear()
         {

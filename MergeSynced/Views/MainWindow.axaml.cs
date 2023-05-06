@@ -36,7 +36,7 @@ namespace MergeSynced.Views
         
         private WindowNotificationManager? _notificationManager;
         
-        private readonly ExternalProcesses _ep = new();
+        private ExternalProcesses _ep = new();
 
         // Parse time from external tools' output
         private readonly Regex _reTime = new(@"time=\s*([0-9\.:]*)", RegexOptions.IgnoreCase);
@@ -253,7 +253,6 @@ namespace MergeSynced.Views
 
                 MainViewModel.ProgressPercent = 25;
                 result = _ep.ParseMkvmergeJson(MainViewModel.MediaDataA);
-                SelectTrackA.SelectedIndex = 0;
 
                 if (_ep.MkvmergeProcess.ExitCode > 0 || !result)
                 {
@@ -263,16 +262,17 @@ namespace MergeSynced.Views
                 }
 
                 MainViewModel.ProgressPercent = 50;
+                SelectTrackA.SelectedIndex = 0;
                 SelectTrackA.IsEnabled = true;
 
                 // B
+                _ep = new ExternalProcesses();
                 _ep.CallMkvmerge($"--identification-format json --identify \"{FilePathB.Text}\"",
                     _ep.ProbeOutputHandler, _workingDir);
                 await _ep.MkvmergeProcess.WaitForExitAsync();
 
                 MainViewModel.ProgressPercent = 75;
                 result = _ep.ParseMkvmergeJson(MainViewModel.MediaDataB);
-                SelectTrackB.SelectedIndex = 0;
 
                 if (_ep.MkvmergeProcess.ExitCode > 0 || !result)
                 {
@@ -282,6 +282,7 @@ namespace MergeSynced.Views
                 }
 
                 MainViewModel.ProgressPercent = 100;
+                SelectTrackB.SelectedIndex = 0;
                 SelectTrackB.IsEnabled = true;
             }
             // Using ffmpeg   /////////////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +298,6 @@ namespace MergeSynced.Views
 
                 MainViewModel.ProgressPercent = 25;
                 result = _ep.ParseFfprobeJson(MainViewModel.MediaDataA);
-                SelectTrackA.SelectedIndex = 0;
 
                 if (_ep.FfprobeProcess.ExitCode > 0 || !result)
                 {
@@ -306,14 +306,16 @@ namespace MergeSynced.Views
                     return;
                 }
                 MainViewModel.ProgressPercent = 50;
+                SelectTrackA.SelectedIndex = 0;
                 SelectTrackA.IsEnabled = true;
 
+                // B
+                _ep = new ExternalProcesses();
                 _ep.CallFfprobe(FilePathB.Text, _workingDir);
                 await _ep.FfprobeProcess.WaitForExitAsync();
 
                 MainViewModel.ProgressPercent = 75;
                 result = _ep.ParseFfprobeJson(MainViewModel.MediaDataB);
-                SelectTrackB.SelectedIndex = 0;
 
                 if (_ep.FfprobeProcess.ExitCode > 0 || !result)
                 {
@@ -322,6 +324,7 @@ namespace MergeSynced.Views
                     return;
                 }
                 MainViewModel.ProgressPercent = 100;
+                SelectTrackB.SelectedIndex = 0;
                 SelectTrackB.IsEnabled = true;
             }
 
